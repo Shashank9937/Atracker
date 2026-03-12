@@ -12,6 +12,13 @@ import { DecisionJournalPage } from './pages/DecisionJournalPage';
 import { KnowledgeVaultPage } from './pages/KnowledgeVaultPage';
 import { KPIAnalyticsPage } from './pages/KPIAnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AIAgentsPage } from './pages/AIAgentsPage';
+import { AIAgentBuilderPage } from './pages/AIAgentBuilderPage';
+import { AIAgentArchitectPage } from './pages/AIAgentArchitectPage';
+import { AILearningRoadmapPage } from './pages/AILearningRoadmapPage';
+import { AIAgentExperimentsPage } from './pages/AIAgentExperimentsPage';
+import { AIToolsLibraryPage } from './pages/AIToolsLibraryPage';
+import { AIAgentNotesPage } from './pages/AIAgentNotesPage';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { QuickCaptureModal } from './components/QuickCaptureModal';
@@ -21,7 +28,8 @@ const DEFAULT_PAGE = 'dashboard';
 
 const resolvePage = () => {
   const hash = window.location.hash.replace('#', '');
-  return NAV_ITEMS.some((item) => item.id === hash) ? hash : DEFAULT_PAGE;
+  const isValid = NAV_ITEMS.some((item) => item.id === hash) || hash.startsWith('ai-agents');
+  return isValid ? hash : DEFAULT_PAGE;
 };
 
 function App() {
@@ -82,6 +90,12 @@ function App() {
         return;
       }
 
+      if (!editing && event.altKey && event.key.toLowerCase() === 'a') {
+        event.preventDefault();
+        navigateTo('ai-agents');
+        return;
+      }
+
       if (!editing && event.altKey) {
         const map = {
           1: 'dashboard',
@@ -139,6 +153,20 @@ function App() {
         return <KPIAnalyticsPage />;
       case 'settings':
         return <SettingsPage />;
+      case 'ai-agents':
+        return <AIAgentsPage onNavigate={navigateTo} />;
+      case 'ai-agents/builder':
+        return <AIAgentBuilderPage onNavigate={navigateTo} />;
+      case 'ai-agents/architect':
+        return <AIAgentArchitectPage onNavigate={navigateTo} />;
+      case 'ai-agents/roadmap':
+        return <AILearningRoadmapPage onNavigate={navigateTo} />;
+      case 'ai-agents/experiments':
+        return <AIAgentExperimentsPage onNavigate={navigateTo} />;
+      case 'ai-agents/library':
+        return <AIToolsLibraryPage onNavigate={navigateTo} />;
+      case 'ai-agents/notes':
+        return <AIAgentNotesPage onNavigate={navigateTo} />;
       case 'dashboard':
       default:
         return <DashboardPage onOpenJournal={() => setJournalOpen(true)} onOpenQuickCapture={() => setQuickCaptureOpen(true)} onQuickAction={handleQuickAction} />;

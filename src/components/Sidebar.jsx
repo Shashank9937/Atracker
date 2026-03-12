@@ -12,6 +12,7 @@ import {
   Radar,
   Settings,
   X,
+  Cpu,
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { NAV_ITEMS } from '../utils/constants';
@@ -28,6 +29,7 @@ const icons = {
   'decision-journal': NotebookPen,
   'knowledge-vault': BookOpen,
   'kpi-analytics': Gauge,
+  'ai-agents': Cpu,
   settings: Settings,
 };
 

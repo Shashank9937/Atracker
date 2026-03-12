@@ -9,6 +9,7 @@ export const NAV_ITEMS = [
   { id: 'decision-journal', label: 'Decision Journal', shortcut: 'Alt+7' },
   { id: 'knowledge-vault', label: 'Knowledge Vault', shortcut: 'Alt+8' },
   { id: 'kpi-analytics', label: 'KPI Analytics', shortcut: 'Alt+9' },
+  { id: 'ai-agents', label: 'AI Agents', shortcut: 'Alt+A' },
   { id: 'settings', label: 'Settings', shortcut: 'Alt+0' },
 ];
 

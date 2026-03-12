@@ -171,10 +171,23 @@ const normalizeKnowledgeItem = (item) => ({
   tags: Array.isArray(item?.tags)
     ? item.tags.map((tag) => String(tag).trim()).filter(Boolean)
     : String(item?.tags || '')
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean),
   createdAt: item?.createdAt || getTodayKey(),
+});
+
+const normalizeAIAgent = (agent) => ({
+  id: agent?.id || createId('agent'),
+  name: agent?.name || '',
+  type: agent?.type || 'Assistant',
+  provider: agent?.provider || 'OpenAI',
+  model: agent?.model || '',
+  role: agent?.role || '',
+  capabilities: Array.isArray(agent?.capabilities) ? agent.capabilities : [],
+  status: agent?.status || 'Active',
+  config: agent?.config || {},
+  createdAt: agent?.createdAt || getTodayKey(),
 });
 
 const normalizeQuickNote = (note) => ({
@@ -230,6 +243,7 @@ const normalizeAppData = (raw) => {
     eveningJournals: Array.isArray(raw.eveningJournals)
       ? raw.eveningJournals.map(normalizeEveningJournal).sort(byDateDesc)
       : [],
+    aiAgents: Array.isArray(raw.aiAgents) ? raw.aiAgents.map(normalizeAIAgent) : [],
   };
 };
 
@@ -344,6 +358,14 @@ export const AppProvider = ({ children }) => {
     setData((current) => ({
       ...current,
       eveningJournals: upsertById(current.eveningJournals, record),
+    }));
+  };
+
+  const saveAIAgent = (agent) => {
+    const record = normalizeAIAgent(agent);
+    setData((current) => ({
+      ...current,
+      aiAgents: [record, ...current.aiAgents.filter((a) => a.id !== record.id)],
     }));
   };
 
@@ -490,6 +512,7 @@ export const AppProvider = ({ children }) => {
     addKnowledgeItem,
     addEveningJournal,
     addQuickCapture,
+    saveAIAgent,
     deleteRecord,
     updateSettings,
     importState,
