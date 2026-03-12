@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: 244 247 251;
+  --bg-accent: 228 241 255;
+  --panel: 255 255 255;
+  --panel-strong: 248 250 252;
+  --text: 15 23 42;
+  --muted: 100 116 139;
+  --border: 226 232 240;
+}
+
+.dark {
+  color-scheme: dark;
+  --bg: 7 17 31;
+  --bg-accent: 17 37 59;
+  --panel: 11 18 32;
+  --panel-strong: 15 23 42;
+  --text: 226 232 240;
+  --muted: 148 163 184;
+  --border: 30 41 59;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  color: rgb(var(--text));
+  background:
+    radial-gradient(circle at top left, rgba(36, 159, 232, 0.16), transparent 30%),
+    radial-gradient(circle at top right, rgba(93, 224, 192, 0.1), transparent 24%),
+    linear-gradient(180deg, rgb(var(--bg)) 0%, rgb(var(--bg-accent)) 100%);
+  background-attachment: fixed;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(36, 159, 232, 0.28);
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    @apply outline-none;
+  }
+}
+
+@layer components {
+  .panel-card {
+    @apply rounded-3xl border border-white/60 bg-white/80 shadow-soft backdrop-blur-xl transition duration-300 dark:border-slate-800/80 dark:bg-slate-900/75;
+  }
+
+  .panel-card-strong {
+    @apply rounded-3xl border border-brand-200/50 bg-gradient-to-br from-brand-500/10 via-white/90 to-mint/10 shadow-glow backdrop-blur-xl dark:border-brand-500/20 dark:from-brand-500/15 dark:via-slate-900/90 dark:to-mint/10;
+  }
+
+  .input-control {
+    @apply w-full rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-400 focus:ring-2 focus:ring-brand-200/60 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand-400 dark:focus:ring-brand-500/20;
+  }
+
+  .select-control {
+    @apply input-control appearance-none;
+  }
+
+  .textarea-control {
+    @apply input-control min-h-[110px] resize-y;
+  }
+
+  .primary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600 focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .secondary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-brand-300 hover:text-brand-700 focus:ring-2 focus:ring-brand-200/60 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:border-brand-500 dark:hover:text-brand-200;
+  }
+
+  .ghost-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white;
+  }
+
+  .danger-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-800/80 dark:bg-slate-900/80 dark:text-slate-300;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-slate-900 dark:text-white;
+  }
+
+  .section-copy {
+    @apply text-sm text-slate-500 dark:text-slate-400;
+  }
+}
+
+.app-shell {
+  position: relative;
+}
+
+.app-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent 80%);
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+.range-input {
+  accent-color: #249fe8;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.35);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
