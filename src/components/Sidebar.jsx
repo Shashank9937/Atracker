@@ -1,6 +1,7 @@
 import {
   Activity,
   BookOpen,
+  BookMarked,
   Brain,
   Gauge,
   Home,
@@ -19,6 +20,7 @@ import { cn } from '../utils/cn';
 const icons = {
   dashboard: Home,
   'daily-execution': Activity,
+  'book-learning': BookMarked,
   'idea-lab': Lightbulb,
   'opportunity-radar': Radar,
   'networking-crm': Network,

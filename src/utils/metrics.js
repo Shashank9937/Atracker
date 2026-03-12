@@ -12,6 +12,11 @@ import {
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+const getTotalLearningHours = (entry) => Number(entry?.learningHours || 0) + Number(entry?.readingMinutes || 0) / 60;
+
+const isReadingDay = (entry) =>
+  Number(entry?.readingMinutes || 0) > 0 || Number(entry?.pagesRead || 0) > 0 || Boolean(entry?.bookInsightOfDay?.trim());
+
 export const countCompletedTasks = (entry) =>
   (entry?.missionTasks ?? []).filter((task) => task.text?.trim() && task.done).length;
 
@@ -35,7 +40,7 @@ export const getFounderScoreBreakdown = (entry) => {
   return {
     deepWork: Math.round(clamp((Number(entry.deepWorkHours) / 5) * 25, 0, 25)),
     execution: Math.round(clamp(completionRatio * 25, 0, 25)),
-    learning: Math.round(clamp((Number(entry.learningHours) / 2) * 15, 0, 15)),
+    learning: Math.round(clamp((getTotalLearningHours(entry) / 2) * 15, 0, 15)),
     health: Math.round(
       clamp(
         (entry.exercise ? 8 : 0) + clamp((10 - Number(entry.smokingCount)) * 0.6, 0, 6) + clamp((Number(entry.energyLevel) / 10) * 6, 0, 6),
@@ -83,6 +88,21 @@ const withinRange = (value, start, end) => {
   return date >= start && date <= end;
 };
 
+export const getLearningStreak = (dailyEntries, until = new Date()) => {
+  const entryMap = new Map(dailyEntries.map((entry) => [entry.date, entry]));
+  const cursor = parseDateKey(toDateKey(until));
+  let streak = 0;
+
+  while (true) {
+    const entry = entryMap.get(toDateKey(cursor));
+    if (!isReadingDay(entry)) break;
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+};
+
 export const buildWeeklyTrendData = (data, weeks = 6) => {
   const buckets = buildWeekBuckets(weeks);
 
@@ -104,9 +124,13 @@ export const buildWeeklyTrendData = (data, weeks = 6) => {
       ),
     ),
     learningHours: buckets.map((bucket) =>
-      data.dailyEntries.reduce(
-        (total, entry) => (withinRange(entry.date, bucket.start, bucket.end) ? total + Number(entry.learningHours || 0) : total),
-        0,
+      Number(
+        data.dailyEntries
+          .reduce(
+            (total, entry) => (withinRange(entry.date, bucket.start, bucket.end) ? total + getTotalLearningHours(entry) : total),
+            0,
+          )
+          .toFixed(1),
       ),
     ),
     executionTasks: buckets.map((bucket) =>
@@ -130,6 +154,26 @@ export const buildWeeklyTrendData = (data, weeks = 6) => {
           .toFixed(1),
       ),
     ),
+  };
+};
+
+export const buildBookTrendData = (data, weeks = 8) => {
+  const buckets = buildWeekBuckets(weeks);
+
+  return {
+    labels: buckets.map((bucket) => bucket.label),
+    booksCompleted: buckets.map((bucket) =>
+      data.books.filter(
+        (book) => book.status === 'Completed' && book.finishDate && withinRange(book.finishDate, bucket.start, bucket.end),
+      ).length,
+    ),
+    readingMinutesPerWeek: buckets.map((bucket) =>
+      data.dailyEntries.reduce(
+        (total, entry) => (withinRange(entry.date, bucket.start, bucket.end) ? total + Number(entry.readingMinutes || 0) : total),
+        0,
+      ),
+    ),
+    learningStreak: buckets.map((bucket) => getLearningStreak(data.dailyEntries, bucket.end)),
   };
 };
 
@@ -157,7 +201,23 @@ export const getActiveIdea = (ideas) => {
   })[0];
 };
 
-export const getLatestInsights = (knowledgeItems, dailyEntries, decisions, eveningJournals) => {
+export const getCurrentReadingBook = (books, todayEntry) => {
+  const title = todayEntry?.bookBeingRead?.trim();
+  if (title) {
+    return books.find((book) => book.bookTitle === title) || {
+      bookTitle: title,
+      author: 'Unknown author',
+      category: 'Book',
+      status: 'Reading',
+      pages: 0,
+      dailyReadingMinutes: 0,
+    };
+  }
+
+  return books.find((book) => book.status === 'Reading') || null;
+};
+
+export const getLatestInsights = (knowledgeItems, dailyEntries, decisions, eveningJournals, books = []) => {
   const merged = [
     ...knowledgeItems.map((item) => ({
       id: item.id,
@@ -175,6 +235,15 @@ export const getLatestInsights = (knowledgeItems, dailyEntries, decisions, eveni
         detail: entry.winOfDay,
         createdAt: entry.date,
       })),
+    ...dailyEntries
+      .filter((entry) => entry.bookInsightOfDay)
+      .map((entry) => ({
+        id: `${entry.id}-book`,
+        source: 'Book insight',
+        title: entry.bookInsightOfDay,
+        detail: entry.bookBeingRead,
+        createdAt: entry.date,
+      })),
     ...decisions.map((decision) => ({
       id: decision.id,
       source: 'Decision',
@@ -189,6 +258,15 @@ export const getLatestInsights = (knowledgeItems, dailyEntries, decisions, eveni
       detail: journal.learning,
       createdAt: journal.date,
     })),
+    ...books
+      .filter((book) => book.keyLessons || book.businessInsights || book.ideasToApply)
+      .map((book) => ({
+        id: book.id,
+        source: 'Book',
+        title: book.bookTitle,
+        detail: book.businessInsights || book.keyLessons || book.ideasToApply,
+        createdAt: book.finishDate || book.startDate || book.createdAt,
+      })),
   ];
 
   return merged
@@ -204,8 +282,10 @@ export const getThisWeekSnapshot = (data) => {
 
   return {
     deepWorkHours: Number(entries.reduce((sum, entry) => sum + Number(entry.deepWorkHours || 0), 0).toFixed(1)),
-    learningHours: Number(entries.reduce((sum, entry) => sum + Number(entry.learningHours || 0), 0).toFixed(1)),
+    learningHours: Number(entries.reduce((sum, entry) => sum + getTotalLearningHours(entry), 0).toFixed(1)),
     contactsReached: entries.reduce((sum, entry) => sum + Number(entry.peopleContacted || 0), 0),
     tasksCompleted: entries.reduce((sum, entry) => sum + countCompletedTasks(entry), 0),
+    readingMinutes: entries.reduce((sum, entry) => sum + Number(entry.readingMinutes || 0), 0),
+    pagesRead: entries.reduce((sum, entry) => sum + Number(entry.pagesRead || 0), 0),
   };
 };

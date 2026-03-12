@@ -112,6 +112,7 @@ export const SettingsPage = () => {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {[
               ['Daily Entries', data.dailyEntries.length],
+              ['Books', data.books.length],
               ['Ideas', data.ideas.length],
               ['Opportunities', data.opportunities.length],
               ['Contacts', data.contacts.length],

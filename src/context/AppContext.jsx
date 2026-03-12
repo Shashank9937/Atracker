@@ -1,15 +1,18 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getTodayKey } from '../utils/date';
 import {
+  buildBookTrendData,
   buildWeeklyProgress,
   buildWeeklyTrendData,
   calculateFounderScore,
   getActiveIdea,
+  getCurrentReadingBook,
   getLatestInsights,
+  getLearningStreak,
   getThisWeekSnapshot,
   getUpcomingFollowUps,
 } from '../utils/metrics';
-import { createEmptyDailyEntry, createSampleData } from '../utils/sampleData';
+import { createEmptyBookRecord, createEmptyDailyEntry, createSampleData } from '../utils/sampleData';
 import { loadAppData, saveAppData } from '../utils/storage';
 
 const AppContext = createContext(null);
@@ -48,11 +51,43 @@ const normalizeDailyEntry = (entry) => {
     missionTasks: tasks,
     peopleContacted: toNumber(entry?.peopleContacted, 0),
     learningHours: toNumber(entry?.learningHours, 0),
+    readingMinutes: toNumber(entry?.readingMinutes, 0),
+    pagesRead: toNumber(entry?.pagesRead, 0),
     deepWorkHours: toNumber(entry?.deepWorkHours, 0),
     smokingCount: toNumber(entry?.smokingCount, 0),
     energyLevel: toNumber(entry?.energyLevel, 5),
     focusLevel: toNumber(entry?.focusLevel, 5),
+    bookBeingRead: entry?.bookBeingRead || '',
+    bookInsightOfDay: entry?.bookInsightOfDay || '',
     exercise: Boolean(entry?.exercise),
+  };
+};
+
+const normalizeBook = (book) => {
+  const base = createEmptyBookRecord();
+
+  return {
+    ...base,
+    ...book,
+    id: book?.id || base.id,
+    bookTitle: book?.bookTitle || '',
+    author: book?.author || '',
+    category: book?.category || base.category,
+    status: book?.status || base.status,
+    startDate: book?.startDate || '',
+    finishDate: book?.finishDate || '',
+    pages: toNumber(book?.pages, 0),
+    dailyReadingMinutes: toNumber(book?.dailyReadingMinutes, 0),
+    keyLessons: book?.keyLessons || '',
+    favoriteQuotes: book?.favoriteQuotes || '',
+    actionableIdeas: book?.actionableIdeas || '',
+    bookRating: toNumber(book?.bookRating, 7),
+    summary: book?.summary || '',
+    keyConcepts: book?.keyConcepts || '',
+    ideasToApply: book?.ideasToApply || '',
+    businessInsights: book?.businessInsights || '',
+    personalReflection: book?.personalReflection || '',
+    createdAt: book?.createdAt || base.createdAt,
   };
 };
 
@@ -163,6 +198,13 @@ const normalizeEveningJournal = (journal) => ({
 
 const byDateDesc = (left, right) => new Date(right.date || right.createdAt || 0) - new Date(left.date || left.createdAt || 0);
 const byScoreDesc = (key) => (left, right) => toNumber(right[key], 0) - toNumber(left[key], 0);
+const bookStatusOrder = { Reading: 0, 'Not Started': 1, Completed: 2 };
+const byBookPriority = (left, right) => {
+  const rankDelta = (bookStatusOrder[left.status] ?? 99) - (bookStatusOrder[right.status] ?? 99);
+  if (rankDelta !== 0) return rankDelta;
+
+  return new Date(right.finishDate || right.startDate || right.createdAt || 0) - new Date(left.finishDate || left.startDate || left.createdAt || 0);
+};
 
 const normalizeAppData = (raw) => {
   if (!raw || typeof raw !== 'object') {
@@ -175,6 +217,7 @@ const normalizeAppData = (raw) => {
       theme: raw.settings?.theme === 'light' ? 'light' : 'dark',
     },
     dailyEntries: Array.isArray(raw.dailyEntries) ? raw.dailyEntries.map(normalizeDailyEntry).sort(byDateDesc) : [],
+    books: Array.isArray(raw.books) ? raw.books.map(normalizeBook).sort(byBookPriority) : [],
     ideas: Array.isArray(raw.ideas) ? raw.ideas.map(normalizeIdea).sort(byScoreDesc('validationScore')) : [],
     opportunities: Array.isArray(raw.opportunities)
       ? raw.opportunities.map(normalizeOpportunity).sort(byScoreDesc('opportunityScore'))
@@ -191,8 +234,8 @@ const normalizeAppData = (raw) => {
 };
 
 const upsertById = (list, record) => [record, ...list.filter((item) => item.id !== record.id)].sort(byDateDesc);
-
 const upsertDailyByDate = (list, record) => [record, ...list.filter((item) => item.date !== record.date)].sort(byDateDesc);
+const upsertBookById = (list, record) => [record, ...list.filter((item) => item.id !== record.id)].sort(byBookPriority);
 
 export const AppProvider = ({ children }) => {
   const [data, setData] = useState(() => normalizeAppData(loadAppData() || createSampleData()));
@@ -237,6 +280,14 @@ export const AppProvider = ({ children }) => {
     patchDailyEntry(todayKey, (entry) => ({
       ...entry,
       deepWorkHours: Number((Number(entry.deepWorkHours || 0) + minutes / 60).toFixed(1)),
+    }));
+  };
+
+  const saveBook = (book) => {
+    const record = normalizeBook(book);
+    setData((current) => ({
+      ...current,
+      books: upsertBookById(current.books, record),
     }));
   };
 
@@ -400,13 +451,16 @@ export const AppProvider = ({ children }) => {
 
   const founderScore = useMemo(() => calculateFounderScore(todayEntry), [todayEntry]);
   const weeklyProgress = useMemo(() => buildWeeklyProgress(data.dailyEntries), [data.dailyEntries]);
+  const learningStreak = useMemo(() => getLearningStreak(data.dailyEntries), [data.dailyEntries]);
   const kpiTrends = useMemo(() => buildWeeklyTrendData(data, 8), [data]);
+  const bookTrends = useMemo(() => buildBookTrendData(data, 8), [data]);
   const upcomingFollowUps = useMemo(() => getUpcomingFollowUps(data.contacts), [data.contacts]);
   const latestInsights = useMemo(
-    () => getLatestInsights(data.knowledgeItems, data.dailyEntries, data.decisions, data.eveningJournals),
-    [data.knowledgeItems, data.dailyEntries, data.decisions, data.eveningJournals],
+    () => getLatestInsights(data.knowledgeItems, data.dailyEntries, data.decisions, data.eveningJournals, data.books),
+    [data.knowledgeItems, data.dailyEntries, data.decisions, data.eveningJournals, data.books],
   );
   const activeIdea = useMemo(() => getActiveIdea(data.ideas), [data.ideas]);
+  const currentBook = useMemo(() => getCurrentReadingBook(data.books, todayEntry), [data.books, todayEntry]);
   const thisWeekSnapshot = useMemo(() => getThisWeekSnapshot(data), [data]);
 
   const value = {
@@ -415,15 +469,19 @@ export const AppProvider = ({ children }) => {
     todayEntry,
     founderScore,
     weeklyProgress,
+    learningStreak,
     kpiTrends,
+    bookTrends,
     upcomingFollowUps,
     latestInsights,
     activeIdea,
+    currentBook,
     thisWeekSnapshot,
     saveDailyEntry,
     patchDailyEntry,
     patchTodayEntry,
     addDeepWorkMinutes,
+    saveBook,
     addIdea,
     addOpportunity,
     addContact,

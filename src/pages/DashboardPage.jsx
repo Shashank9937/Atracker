@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   Activity,
   ArrowUpRight,
+  BookMarked,
   Dumbbell,
   HeartPulse,
   Lightbulb,
@@ -33,6 +34,8 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
     todayEntry,
     founderScore,
     activeIdea,
+    currentBook,
+    learningStreak,
     latestInsights,
     weeklyProgress,
     upcomingFollowUps,
@@ -78,7 +81,7 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
             </Button>
           </>
         }
-        description="Your founder command center for execution, learning, health, and network momentum."
+        description="Your founder command center for execution, learning, reading, health, and network momentum."
         title="Dashboard"
       />
 
@@ -113,7 +116,7 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
               </label>
             ))}
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-4">
             <button className="secondary-button justify-start" onClick={() => onQuickAction('idea')} type="button">
               <Lightbulb className="h-4 w-4" />
               Add Idea
@@ -121,6 +124,10 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
             <button className="secondary-button justify-start" onClick={() => onQuickAction('work')} type="button">
               <Activity className="h-4 w-4" />
               Log Work
+            </button>
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('journal')} type="button">
+              <NotebookPen className="h-4 w-4" />
+              Journal Entry
             </button>
             <button className="secondary-button justify-start" onClick={() => onQuickAction('contact')} type="button">
               <UserPlus className="h-4 w-4" />
@@ -151,6 +158,49 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
         </Card>
 
         <DeepWorkTimer onLogMinutes={addDeepWorkMinutes} totalLoggedHours={Number(todayEntry.deepWorkHours || 0)} />
+
+        <Card className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-brand-500">Current Book Being Read</p>
+              <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">{currentBook?.bookTitle || 'No active book yet'}</h3>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{currentBook ? `${currentBook.author} • ${currentBook.category}` : 'Use Book Learning to capture your current reading loop.'}</p>
+            </div>
+            <BookMarked className="h-5 w-5 text-brand-500" />
+          </div>
+          {currentBook ? (
+            <div className="mt-5 space-y-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Pages Read Today</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{todayEntry.pagesRead || 0}</p>
+                </div>
+                <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Reading Minutes</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{todayEntry.readingMinutes || 0}</p>
+                </div>
+                <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning Streak</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{learningStreak}d</p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/50">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Book Insight of the Day</p>
+                <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{todayEntry.bookInsightOfDay || currentBook.businessInsights || currentBook.keyLessons}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <EmptyState copy="Add a book, mark it as Reading, and your active learning system will appear here." title="No current book" />
+            </div>
+          )}
+          <div className="mt-5">
+            <button className="secondary-button w-full justify-center" onClick={() => onQuickAction('book')} type="button">
+              <ArrowUpRight className="h-4 w-4" />
+              Open Book Learning
+            </button>
+          </div>
+        </Card>
 
         <Card className="p-6">
           <div className="flex items-start justify-between gap-4">
@@ -282,8 +332,8 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
               <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{thisWeekSnapshot.deepWorkHours}h</p>
             </div>
             <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Tasks Completed</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{thisWeekSnapshot.tasksCompleted}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Reading</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{thisWeekSnapshot.readingMinutes} min</p>
             </div>
           </div>
         </Card>

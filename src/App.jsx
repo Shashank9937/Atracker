@@ -3,6 +3,7 @@ import { useAppContext } from './context/AppContext';
 import { NAV_ITEMS } from './utils/constants';
 import { DashboardPage } from './pages/DashboardPage';
 import { DailyExecutionPage } from './pages/DailyExecutionPage';
+import { BookLearningPage } from './pages/BookLearningPage';
 import { IdeaLabPage } from './pages/IdeaLabPage';
 import { OpportunityRadarPage } from './pages/OpportunityRadarPage';
 import { NetworkingCRMPage } from './pages/NetworkingCRMPage';
@@ -75,6 +76,12 @@ function App() {
         setJournalOpen(true);
       }
 
+      if (!editing && event.altKey && event.key.toLowerCase() === 'b') {
+        event.preventDefault();
+        navigateTo('book-learning');
+        return;
+      }
+
       if (!editing && event.altKey) {
         const map = {
           1: 'dashboard',
@@ -103,6 +110,7 @@ function App() {
   const handleQuickAction = (action) => {
     if (action === 'idea') navigateTo('idea-lab', 'idea-form');
     if (action === 'work') navigateTo('daily-execution', 'daily-entry-form');
+    if (action === 'book') navigateTo('book-learning', 'book-form');
     if (action === 'contact') navigateTo('networking-crm', 'contact-form');
     if (action === 'journal') setJournalOpen(true);
   };
@@ -113,6 +121,8 @@ function App() {
     switch (activePage) {
       case 'daily-execution':
         return <DailyExecutionPage />;
+      case 'book-learning':
+        return <BookLearningPage />;
       case 'idea-lab':
         return <IdeaLabPage />;
       case 'opportunity-radar':

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Save, Sparkles } from 'lucide-react';
+import { BookMarked, Save, Sparkles } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -18,6 +18,7 @@ export const DailyExecutionPage = () => {
   const [form, setForm] = useState(createEmptyDailyEntry(getTodayKey()));
 
   const selectedEntry = useMemo(() => data.dailyEntries.find((entry) => entry.date === selectedDate), [data.dailyEntries, selectedDate]);
+  const bookTitles = useMemo(() => data.books.map((book) => book.bookTitle).filter(Boolean), [data.books]);
 
   useEffect(() => {
     if (selectedEntry) {
@@ -45,7 +46,7 @@ export const DailyExecutionPage = () => {
   return (
     <div>
       <PageHeader
-        description="Track the founder inputs that compound: mission tasks, deep work, learning, health, and sharp reflection."
+        description="Track the founder inputs that compound: mission tasks, deep work, learning, reading, health, and sharp reflection."
         title="Daily Execution"
       />
 
@@ -71,6 +72,14 @@ export const DailyExecutionPage = () => {
               <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning Hours</p>
                 <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{Number(form.learningHours || 0).toFixed(1)}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Reading Minutes</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{form.readingMinutes}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Pages Read</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{form.pagesRead}</p>
               </div>
             </div>
           </Card>
@@ -133,6 +142,39 @@ export const DailyExecutionPage = () => {
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Smoking Count</label>
                 <input className="input-control" min="0" onChange={(event) => handleField('smokingCount', Number(event.target.value))} type="number" value={form.smokingCount} />
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200/80 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/40">
+              <div className="mb-5 flex items-center gap-3">
+                <BookMarked className="h-5 w-5 text-brand-500" />
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">Book Learning</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Attach daily reading to the rest of your operating loop.</p>
+                </div>
+              </div>
+              <div className="grid gap-5 lg:grid-cols-[1.2fr_0.6fr_0.6fr]">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Book Being Read</label>
+                  <input className="input-control" list="daily-book-titles" onChange={(event) => handleField('bookBeingRead', event.target.value)} placeholder="Select or type a book title" value={form.bookBeingRead} />
+                  <datalist id="daily-book-titles">
+                    {bookTitles.map((title) => (
+                      <option key={title} value={title} />
+                    ))}
+                  </datalist>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Reading Minutes</label>
+                  <input className="input-control" min="0" onChange={(event) => handleField('readingMinutes', Number(event.target.value))} type="number" value={form.readingMinutes} />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Pages Read</label>
+                  <input className="input-control" min="0" onChange={(event) => handleField('pagesRead', Number(event.target.value))} type="number" value={form.pagesRead} />
+                </div>
+              </div>
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Book Insight of the Day</label>
+                <textarea className="textarea-control" onChange={(event) => handleField('bookInsightOfDay', event.target.value)} value={form.bookInsightOfDay} />
               </div>
             </div>
 
@@ -199,17 +241,21 @@ export const DailyExecutionPage = () => {
       <div className="mt-6">
         <Card className="p-6">
           <h3 className="section-title">Recent Entries</h3>
-          <p className="section-copy">A fast read of your latest execution patterns.</p>
+          <p className="section-copy">A fast read of your latest execution and learning patterns.</p>
           {data.dailyEntries.length ? (
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {data.dailyEntries.slice(0, 6).map((entry) => (
                 <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/50" key={entry.id}>
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">{formatLongDate(entry.date)}</p>
                   <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{entry.winOfDay || entry.executionNotes || 'No summary captured yet.'}</p>
+                  {entry.bookInsightOfDay ? (
+                    <p className="mt-3 text-sm text-brand-600 dark:text-brand-200">Book insight: {entry.bookInsightOfDay}</p>
+                  ) : null}
                   <div className="mt-4 flex flex-wrap gap-2">
                     <span className="badge">{entry.deepWorkHours}h deep work</span>
                     <span className="badge">{entry.peopleContacted} contacts</span>
-                    <span className="badge">{entry.energyLevel}/10 energy</span>
+                    <span className="badge">{entry.readingMinutes} min reading</span>
+                    <span className="badge">{entry.pagesRead} pages</span>
                   </div>
                 </div>
               ))}
