@@ -1,97 +1,158 @@
-import { PageHeader } from '../components/PageHeader';
+import { useMemo, useState } from 'react';
+import { BookOpen, CheckCircle2, Circle, Save } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
+import { AI_MODULE_STATUS_OPTIONS } from '../utils/constants';
+import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { BookOpen, CheckCircle2, Circle, Trophy } from 'lucide-react';
+import { PageHeader } from '../components/PageHeader';
 
 export const AILearningRoadmapPage = () => {
-    const steps = [
-        {
-            id: 1,
-            title: 'Foundation: LLM Fundamentals',
-            desc: 'Tokenization, context windows, and the transformer architecture basics.',
-            status: 'Completed',
-            items: ['What are Transformers?', 'Understanding Quantization', 'Local vs Cloud Models']
-        },
-        {
-            id: 2,
-            title: 'Prompt Engineering Mastery',
-            desc: 'System prompts, few-shotting, and chain-of-thought techniques.',
-            status: 'Current',
-            items: ['Structured Output Mastery', 'Prompt Versioning', 'Context Injection']
-        },
-        {
-            id: 3,
-            title: 'Agentic Architectures',
-            desc: 'Building recursive loops and state management for autonomous units.',
-            status: 'Upcoming',
-            items: ['Memory Systems (RAG)', 'Tool Use/Function Calling', 'Agentic Reasonings']
-        },
-        {
-            id: 4,
-            title: 'Production Engineering',
-            desc: 'Latency optimization, cost management, and evaluation frameworks.',
-            status: 'Locked',
-            items: ['Evaluation Datasets', 'Semantic Caching', 'Deployment Stacks']
-        }
-    ];
+  const { data, todayKey, saveAiModule, logAiModuleHours, toggleAiPracticeTask } = useAppContext();
+  const [hoursDrafts, setHoursDrafts] = useState({});
 
-    return (
-        <div className="space-y-6">
-            <PageHeader
-                title="AI Learning Roadmap"
-                description="A structured path to becoming an AI-native founder and engineer."
-            />
+  const practiceNote = useMemo(
+    () => data.ai.notes.find((note) => note.title === 'Daily Practice Checklist'),
+    [data.ai.notes],
+  );
 
-            <div className="grid gap-6 lg:grid-cols-4">
-                <Card className="p-5 bg-brand-500 text-white border-none">
-                    <Trophy className="h-8 w-8 mb-4 opacity-80" />
-                    <p className="text-xs uppercase tracking-widest opacity-80">Current Skill Level</p>
-                    <h3 className="text-3xl font-bold mt-1">Intermediate</h3>
-                    <p className="text-sm mt-3 opacity-90">25% through the master roadmap.</p>
-                </Card>
-                {/* Placeholder for other stats */}
-            </div>
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        description="A founder-facing AI curriculum seeded from the Altman leverage guide: learn the stack, practice daily, and log actual hours."
+        title="AI Learning Roadmap"
+      />
 
-            <div className="relative mt-8 space-y-4">
-                {steps.map((step, idx) => (
-                    <Card
-                        key={step.id}
-                        className={`p-6 flex gap-6 items-start relative ${step.status === 'Locked' ? 'opacity-50 grayscale' : ''
-                            }`}
-                    >
-                        {idx !== steps.length - 1 && (
-                            <div className="absolute left-[39px] top-20 bottom-[-16px] w-0.5 bg-slate-100 dark:bg-slate-800 z-0"></div>
-                        )}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Modules</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{data.ai.modules.length}</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Core AI leverage topics across learning, shipping, and productization.</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Completed</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{data.ai.modules.filter((module) => module.completed || module.status === 'Complete').length}</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Modules already converted into explicit progress.</p>
+        </Card>
+        <Card className="panel-card-strong p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-brand-600 dark:text-brand-200">Practice Tasks</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{data.ai.dailyPractice.length}</p>
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">Daily repetition makes the Altman leverage thesis operational instead of theoretical.</p>
+        </Card>
+      </div>
 
-                        <div className={`shrink-0 z-10 w-12 h-12 rounded-full flex items-center justify-center ${step.status === 'Completed' ? 'bg-mint/10 text-mint' :
-                                step.status === 'Current' ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' :
-                                    'bg-slate-100 dark:bg-slate-900 text-slate-400'
-                            }`}>
-                            {step.status === 'Completed' ? <CheckCircle2 className="h-6 w-6" /> :
-                                step.status === 'Current' ? <BookOpen className="h-6 w-6" /> :
-                                    <Circle className="h-6 w-6" />}
-                        </div>
+      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
+        <div className="space-y-4">
+          {data.ai.modules.map((module) => (
+            <Card className="p-6" key={module.id}>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className={`rounded-full p-2 ${module.completed || module.status === 'Complete' ? 'bg-mint/10 text-mint' : 'bg-brand-500/10 text-brand-500'}`}>
+                      {module.completed || module.status === 'Complete' ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{module.title}</h3>
+                    <span className="badge">{module.status}</span>
+                  </div>
+                  <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{module.description}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {module.practiceTasks.map((task) => (
+                      <span className="badge" key={task}>
+                        <BookOpen className="h-3.5 w-3.5" />
+                        {task}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <select
+                    className="select-control min-w-[180px]"
+                    onChange={(event) =>
+                      saveAiModule({
+                        ...module,
+                        status: event.target.value,
+                        completed: event.target.value === 'Complete',
+                      })
+                    }
+                    value={module.status}
+                  >
+                    {AI_MODULE_STATUS_OPTIONS.map((option) => (
+                      <option key={option}>{option}</option>
+                    ))}
+                  </select>
+                  <div className="rounded-2xl bg-slate-50/70 px-4 py-3 text-sm dark:bg-slate-950/50">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Hours Logged</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{module.learningHours}</p>
+                  </div>
+                </div>
+              </div>
 
-                        <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{step.title}</h3>
-                                <span className={`badge ${step.status === 'Completed' ? 'bg-mint/10 text-mint border-mint/20' :
-                                        step.status === 'Current' ? 'bg-brand-500/10 text-brand-500 border-brand-500/20' :
-                                            ''
-                                    }`}>{step.status}</span>
-                            </div>
-                            <p className="text-slate-500 dark:text-slate-400 mt-1">{step.desc}</p>
+              <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_auto]">
+                <textarea
+                  className="textarea-control"
+                  onChange={(event) => saveAiModule({ ...module, notes: event.target.value })}
+                  placeholder="Notes and insights"
+                  value={module.notes}
+                />
+                <div className="space-y-3">
+                  <input
+                    className="input-control w-full"
+                    min="0"
+                    onChange={(event) => setHoursDrafts((current) => ({ ...current, [module.id]: event.target.value }))}
+                    placeholder="Hours"
+                    step="0.5"
+                    type="number"
+                    value={hoursDrafts[module.id] || ''}
+                  />
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      const hours = Number(hoursDrafts[module.id] || 0);
+                      if (hours > 0) {
+                        logAiModuleHours(module.id, hours, 'Manual learning log');
+                        setHoursDrafts((current) => ({ ...current, [module.id]: '' }));
+                      }
+                    }}
+                    type="button"
+                  >
+                    <Save className="h-4 w-4" />
+                    Log Hours
+                  </Button>
+                </div>
+              </div>
 
-                            <div className="mt-4 flex flex-wrap gap-2">
-                                {step.items.map(item => (
-                                    <span key={item} className="px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-950/50 text-xs border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300">
-                                        {item}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </Card>
-                ))}
-            </div>
+              <textarea
+                className="textarea-control mt-4"
+                onChange={(event) => saveAiModule({ ...module, resources: event.target.value })}
+                placeholder="Links / resources"
+                value={module.resources}
+              />
+            </Card>
+          ))}
         </div>
-    );
+
+        <div className="space-y-6">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Daily Practice</h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Practice tasks derived from the leverage guide.</p>
+            <div className="mt-5 space-y-3">
+              {data.ai.dailyPractice.map((task) => (
+                <label className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/50" key={task.id}>
+                  <input checked={task.doneDates.includes(todayKey)} onChange={() => toggleAiPracticeTask(task.id)} type="checkbox" />
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-white">{task.title}</p>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{task.description}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Daily Practice Checklist</h2>
+            <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">{practiceNote?.content || 'Checklist note not found.'}</p>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
 };

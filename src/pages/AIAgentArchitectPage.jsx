@@ -1,63 +1,98 @@
-import { PageHeader } from '../components/PageHeader';
+import { useState } from 'react';
+import { Download, Layout } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
+import { createEmptyAiSystem } from '../utils/aiData';
+import { downloadJson } from '../utils/download';
+import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { Layers, Rocket, Zap, MessageSquare } from 'lucide-react';
+import { PageHeader } from '../components/PageHeader';
+import { SystemDesigner } from '../components/SystemDesigner';
 
-export const AIAgentArchitectPage = () => {
-    return (
-        <div className="space-y-6">
-            <PageHeader
-                title="Multi-Agent Architect"
-                description="Design collaborative swarms where agents solve complex problems together."
-            />
+export const AIAgentArchitectPage = ({ onNavigate }) => {
+  const { data, saveAiSystem, deleteAiRecord, createLinkedDecision } = useAppContext();
+  const [form, setForm] = useState(createEmptyAiSystem());
 
-            <div className="grid gap-6 lg:grid-cols-2">
-                <Card className="p-6">
-                    <h3 className="text-xl font-semibold flex items-center gap-2 mb-4">
-                        <Layers className="h-5 w-5 text-brand-500" />
-                        Active Swarms
-                    </h3>
-                    <div className="p-8 border-2 border-dashed rounded-3xl text-center text-slate-500">
-                        <p>No active agent swarms defined.</p>
-                        <button className="mt-4 text-brand-500 font-medium hover:underline">Create Swarm Flow</button>
-                    </div>
-                </Card>
+  const handleDecision = (system) => {
+    createLinkedDecision('system', system.id, {
+      decision: `System decision: ${system.systemName}`,
+      context: system.problem || system.systemDescription,
+      optionsConsidered: 'Simplify the system, expand agents, or change workflow order.',
+      whyChosen: 'Logged from AI Agent Architect.',
+      expectedOutcome: system.expectedOutcome || 'Sharper multi-agent design.',
+      reviewDate: new Date().toISOString().slice(0, 10),
+    });
+    onNavigate('decision-journal');
+  };
 
-                <Card className="p-6">
-                    <h3 className="text-xl font-semibold flex items-center gap-2 mb-4">
-                        <Zap className="h-5 w-5 text-sunrise" />
-                        Architecture Templates
-                    </h3>
-                    <div className="space-y-3">
-                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                            <h4 className="font-medium">Researcher + Writer</h4>
-                            <p className="text-sm text-slate-500">Sequential loop for producing deep-dive reports.</p>
-                        </div>
-                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                            <h4 className="font-medium">Debate Swarm</h4>
-                            <p className="text-sm text-slate-500">Multiple agents testing hypotheses against each other.</p>
-                        </div>
-                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                            <h4 className="font-medium">Manager + Worker</h4>
-                            <p className="text-sm text-slate-500">Hierarchical task delegation and verification.</p>
-                        </div>
-                    </div>
-                </Card>
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        description="Design multi-agent systems with explicit roles, dependencies, sequencing, and exported JSON architecture definitions."
+        title="AI Agent Architect"
+      />
+
+      <SystemDesigner form={form} onCancel={() => setForm(createEmptyAiSystem())} onChange={setForm} onReset={() => setForm(createEmptyAiSystem())} onSave={(system) => {
+        saveAiSystem(system);
+        setForm(createEmptyAiSystem());
+      }} />
+
+      <div className="space-y-4">
+        {data.ai.systems.map((system) => (
+          <Card className="p-6" key={system.id}>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{system.systemName}</h3>
+                  <span className="badge">{system.status}</span>
+                  <span className="badge">{system.industry}</span>
+                </div>
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{system.systemDescription}</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={() => setForm(system)} variant="secondary">
+                  <Layout className="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button onClick={() => downloadJson(`${system.systemName.replace(/\s+/g, '-').toLowerCase()}.json`, system)} variant="secondary">
+                  <Download className="h-4 w-4" />
+                  Export JSON
+                </Button>
+                <Button onClick={() => handleDecision(system)} variant="secondary">
+                  Log Decision
+                </Button>
+                <Button onClick={() => deleteAiRecord('systems', system.id)} variant="danger">
+                  Delete
+                </Button>
+              </div>
             </div>
 
-            <Card className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold">Workflow Designer</h3>
-                    <span className="badge">Beta</span>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              {system.agents.map((agent, index) => (
+                <div className="flex items-center gap-3" key={agent.id}>
+                  <div className="rounded-2xl border border-brand-300/40 bg-brand-500/10 px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">
+                    {agent.role || `Agent ${index + 1}`}
+                  </div>
+                  {index < system.agents.length - 1 ? <span className="text-slate-400">{'\u2192'}</span> : null}
                 </div>
-                <div className="aspect-video bg-slate-900 rounded-3xl flex items-center justify-center text-slate-500 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:20px_20px] opacity-20"></div>
-                    <div className="z-10 text-center">
-                        <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                        <p>Visual workflow editor placeholder.</p>
-                        <p className="text-xs mt-2 uppercase tracking-widest">Canvas Environment</p>
-                    </div>
+              ))}
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {system.agents.map((agent) => (
+                <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50" key={agent.id}>
+                  <p className="font-medium text-slate-900 dark:text-white">{agent.role || 'Unnamed agent'}</p>
+                  <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">Inputs</p>
+                  <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">{agent.inputs || 'Not defined'}</p>
+                  <p className="mt-3 text-xs uppercase tracking-[0.2em] text-slate-400">Outputs</p>
+                  <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">{agent.outputs || 'Not defined'}</p>
+                  <p className="mt-3 text-xs uppercase tracking-[0.2em] text-slate-400">Dependencies</p>
+                  <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">{agent.dependencies || 'None'}</p>
                 </div>
-            </Card>
-        </div>
-    );
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
 };

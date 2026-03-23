@@ -1,3 +1,7 @@
 import { cn } from '../utils/cn';
 
-export const Card = ({ className, children }) => <div className={cn('panel-card', className)}>{children}</div>;
+export const Card = ({ className, children, ...props }) => (
+  <div className={cn('panel-card', className)} {...props}>
+    {children}
+  </div>
+);

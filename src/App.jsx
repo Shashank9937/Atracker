@@ -19,25 +19,38 @@ import { AILearningRoadmapPage } from './pages/AILearningRoadmapPage';
 import { AIAgentExperimentsPage } from './pages/AIAgentExperimentsPage';
 import { AIToolsLibraryPage } from './pages/AIToolsLibraryPage';
 import { AIAgentNotesPage } from './pages/AIAgentNotesPage';
+import { AIOpportunitiesPage } from './pages/AIOpportunitiesPage';
+import { AIAnalyticsPage } from './pages/AIAnalyticsPage';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { QuickCaptureModal } from './components/QuickCaptureModal';
 import { EveningJournalModal } from './components/EveningJournalModal';
+import { AgentQuickCreateModal } from './components/AgentQuickCreateModal';
 
 const DEFAULT_PAGE = 'dashboard';
 
+const PAGE_ALIASES = {
+  'ai-agents/builder': 'ai-agent-builder',
+  'ai-agents/architect': 'ai-agent-architect',
+  'ai-agents/roadmap': 'ai-learning-roadmap',
+  'ai-agents/experiments': 'ai-experiments',
+  'ai-agents/library': 'ai-tools-library',
+  'ai-agents/notes': 'ai-knowledge-notes',
+};
+
 const resolvePage = () => {
   const hash = window.location.hash.replace('#', '');
-  const isValid = NAV_ITEMS.some((item) => item.id === hash) || hash.startsWith('ai-agents');
-  return isValid ? hash : DEFAULT_PAGE;
+  const resolved = PAGE_ALIASES[hash] || hash;
+  return NAV_ITEMS.some((item) => item.id === resolved) ? resolved : DEFAULT_PAGE;
 };
 
 function App() {
-  const { addEveningJournal, addQuickCapture, todayKey } = useAppContext();
+  const { data, addEveningJournal, addQuickCapture, todayKey, saveAiAgent } = useAppContext();
   const [activePage, setActivePage] = useState(resolvePage);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
+  const [agentModalOpen, setAgentModalOpen] = useState(false);
 
   useEffect(() => {
     if (window.location.hash !== `#${activePage}`) {
@@ -72,31 +85,27 @@ function App() {
         setSidebarOpen(false);
         setQuickCaptureOpen(false);
         setJournalOpen(false);
+        setAgentModalOpen(false);
       }
 
-      if (!editing && !event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'q') {
+      if (editing) return;
+
+      if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'q') {
         event.preventDefault();
         setQuickCaptureOpen(true);
       }
 
-      if (!editing && event.shiftKey && event.key.toLowerCase() === 'j') {
+      if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'j') {
         event.preventDefault();
         setJournalOpen(true);
       }
 
-      if (!editing && event.altKey && event.key.toLowerCase() === 'b') {
+      if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'a') {
         event.preventDefault();
-        navigateTo('book-learning');
-        return;
+        setAgentModalOpen(true);
       }
 
-      if (!editing && event.altKey && event.key.toLowerCase() === 'a') {
-        event.preventDefault();
-        navigateTo('ai-agents');
-        return;
-      }
-
-      if (!editing && event.altKey) {
+      if (event.altKey) {
         const map = {
           1: 'dashboard',
           2: 'daily-execution',
@@ -108,11 +117,21 @@ function App() {
           8: 'knowledge-vault',
           9: 'kpi-analytics',
           0: 'settings',
+          b: 'book-learning',
+          g: 'ai-agents',
+          l: 'ai-learning-roadmap',
+          m: 'ai-agent-architect',
+          e: 'ai-experiments',
+          t: 'ai-tools-library',
+          o: 'ai-opportunities',
+          n: 'ai-knowledge-notes',
+          p: 'ai-analytics',
         };
 
-        if (map[event.key]) {
+        const destination = map[event.key.toLowerCase()];
+        if (destination) {
           event.preventDefault();
-          navigateTo(map[event.key]);
+          navigateTo(destination);
         }
       }
     };
@@ -127,6 +146,9 @@ function App() {
     if (action === 'book') navigateTo('book-learning', 'book-form');
     if (action === 'contact') navigateTo('networking-crm', 'contact-form');
     if (action === 'journal') setJournalOpen(true);
+    if (action === 'agent') setAgentModalOpen(true);
+    if (action === 'ai-opportunity') navigateTo('ai-opportunities');
+    if (action === 'ai-experiment') navigateTo('ai-experiments');
   };
 
   const pageTitle = useMemo(() => NAV_ITEMS.find((item) => item.id === activePage)?.label || 'Dashboard', [activePage]);
@@ -155,18 +177,22 @@ function App() {
         return <SettingsPage />;
       case 'ai-agents':
         return <AIAgentsPage onNavigate={navigateTo} />;
-      case 'ai-agents/builder':
+      case 'ai-learning-roadmap':
+        return <AILearningRoadmapPage />;
+      case 'ai-agent-builder':
         return <AIAgentBuilderPage onNavigate={navigateTo} />;
-      case 'ai-agents/architect':
+      case 'ai-agent-architect':
         return <AIAgentArchitectPage onNavigate={navigateTo} />;
-      case 'ai-agents/roadmap':
-        return <AILearningRoadmapPage onNavigate={navigateTo} />;
-      case 'ai-agents/experiments':
-        return <AIAgentExperimentsPage onNavigate={navigateTo} />;
-      case 'ai-agents/library':
-        return <AIToolsLibraryPage onNavigate={navigateTo} />;
-      case 'ai-agents/notes':
-        return <AIAgentNotesPage onNavigate={navigateTo} />;
+      case 'ai-experiments':
+        return <AIAgentExperimentsPage />;
+      case 'ai-tools-library':
+        return <AIToolsLibraryPage />;
+      case 'ai-opportunities':
+        return <AIOpportunitiesPage onNavigate={navigateTo} />;
+      case 'ai-knowledge-notes':
+        return <AIAgentNotesPage />;
+      case 'ai-analytics':
+        return <AIAnalyticsPage />;
       case 'dashboard':
       default:
         return <DashboardPage onOpenJournal={() => setJournalOpen(true)} onOpenQuickCapture={() => setQuickCaptureOpen(true)} onQuickAction={handleQuickAction} />;
@@ -181,8 +207,9 @@ function App() {
         <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">{renderPage()}</main>
       </div>
 
-      <QuickCaptureModal onClose={() => setQuickCaptureOpen(false)} onSave={addQuickCapture} open={quickCaptureOpen} />
+      <QuickCaptureModal agents={data.ai.agents} onClose={() => setQuickCaptureOpen(false)} onSave={addQuickCapture} open={quickCaptureOpen} />
       <EveningJournalModal onClose={() => setJournalOpen(false)} onSave={addEveningJournal} open={journalOpen} todayKey={todayKey} />
+      <AgentQuickCreateModal onClose={() => setAgentModalOpen(false)} onSave={saveAiAgent} open={agentModalOpen} />
     </div>
   );
 }

@@ -13,7 +13,7 @@ import { PageHeader } from '../components/PageHeader';
 const longFormClass = 'textarea-control !min-h-[150px]';
 
 export const BookLearningPage = () => {
-  const { data, bookTrends, currentBook, learningStreak, saveBook, deleteRecord } = useAppContext();
+  const { data, bookTrends, currentBook, learningStreak, saveBook, deleteRecord, createAgentFromBook } = useAppContext();
   const [form, setForm] = useState(createEmptyBookRecord());
   const [editingId, setEditingId] = useState(null);
 
@@ -226,6 +226,9 @@ export const BookLearningPage = () => {
                         <Button onClick={() => handleEdit(book)} variant="secondary">
                           <BookMarked className="h-4 w-4" />
                           Edit
+                        </Button>
+                        <Button onClick={() => createAgentFromBook(book)} variant="secondary">
+                          Agent Seed
                         </Button>
                         <Button onClick={() => handleDelete(book.id)} variant="danger">
                           <Trash2 className="h-4 w-4" />

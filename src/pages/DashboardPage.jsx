@@ -4,6 +4,7 @@ import {
   ArrowUpRight,
   BookMarked,
   Dumbbell,
+  Gauge,
   HeartPulse,
   Lightbulb,
   NotebookPen,
@@ -33,6 +34,8 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
     data,
     todayEntry,
     founderScore,
+    founderLeverage,
+    aiStats,
     activeIdea,
     currentBook,
     learningStreak,
@@ -154,6 +157,57 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
                 </div>
               </div>
             ))}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-brand-500">AI Leverage Progress</p>
+              <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Founder leverage engine</h3>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Track how AI learning, agents, experiments, and opportunity selection increase output.</p>
+            </div>
+            <Gauge className="h-5 w-5 text-brand-500" />
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Founder Leverage</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{founderLeverage}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Agents Designed</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{aiStats.agentsDesigned}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Experiments Run</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{aiStats.experimentsRun}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">AI Topics Learned</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{aiStats.aiTopicsLearned}</p>
+            </div>
+          </div>
+          <div className="mt-5 space-y-3">
+            {aiStats.topHighLeverageOpportunities.map((opportunity) => (
+              <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/50" key={opportunity.id}>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium text-slate-900 dark:text-white">{opportunity.process}</p>
+                  <span className="badge">{opportunity.leverageScore}</span>
+                </div>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{opportunity.industry}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('agent')} type="button">
+              New Agent
+            </button>
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('ai-opportunity')} type="button">
+              New Opportunity
+            </button>
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('ai-experiment')} type="button">
+              Run Experiment
+            </button>
           </div>
         </Card>
 

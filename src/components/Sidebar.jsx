@@ -1,18 +1,24 @@
 import {
   Activity,
-  BookOpen,
+  Archive,
   BookMarked,
+  BookOpen,
   Brain,
+  ChartNoAxesCombined,
+  Cpu,
+  FlaskConical,
   Gauge,
   Home,
   Landmark,
+  Layout,
   Lightbulb,
   Network,
   NotebookPen,
   Radar,
   Settings,
+  Sparkles,
+  TrendingUp,
   X,
-  Cpu,
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { NAV_ITEMS } from '../utils/constants';
@@ -29,7 +35,15 @@ const icons = {
   'decision-journal': NotebookPen,
   'knowledge-vault': BookOpen,
   'kpi-analytics': Gauge,
-  'ai-agents': Cpu,
+  'ai-agents': Brain,
+  'ai-learning-roadmap': Sparkles,
+  'ai-agent-builder': Cpu,
+  'ai-agent-architect': Layout,
+  'ai-experiments': FlaskConical,
+  'ai-tools-library': Archive,
+  'ai-opportunities': TrendingUp,
+  'ai-knowledge-notes': NotebookPen,
+  'ai-analytics': ChartNoAxesCombined,
   settings: Settings,
 };
 
@@ -37,6 +51,11 @@ export const Sidebar = ({ activePage, open, onNavigate, onClose }) => {
   const {
     data: { settings },
   } = useAppContext();
+
+  const sections = NAV_ITEMS.reduce((acc, item) => {
+    acc[item.section] = [...(acc[item.section] || []), item];
+    return acc;
+  }, {});
 
   return (
     <>
@@ -66,40 +85,47 @@ export const Sidebar = ({ activePage, open, onNavigate, onClose }) => {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-2 overflow-y-auto pr-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = icons[item.id];
-            const active = item.id === activePage;
+        <nav className="flex-1 space-y-5 overflow-y-auto pr-1">
+          {Object.entries(sections).map(([section, items]) => (
+            <div key={section}>
+              <p className="mb-2 px-3 text-[11px] uppercase tracking-[0.26em] text-slate-500">{section}</p>
+              <div className="space-y-2">
+                {items.map((item) => {
+                  const Icon = icons[item.id];
+                  const active = item.id === activePage;
 
-            return (
-              <button
-                className={cn(
-                  'flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition',
-                  active
-                    ? 'bg-gradient-to-r from-brand-500/25 to-mint/10 text-white shadow-lg shadow-brand-500/10'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-white',
-                )}
-                key={item.id}
-                onClick={() => {
-                  onNavigate(item.id);
-                  onClose();
-                }}
-                type="button"
-              >
-                <span className="flex items-center gap-3">
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </span>
-                <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{item.shortcut}</span>
-              </button>
-            );
-          })}
+                  return (
+                    <button
+                      className={cn(
+                        'flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition',
+                        active
+                          ? 'bg-gradient-to-r from-brand-500/25 to-mint/10 text-white shadow-lg shadow-brand-500/10'
+                          : 'text-slate-400 hover:bg-slate-900 hover:text-white',
+                      )}
+                      key={item.id}
+                      onClick={() => {
+                        onNavigate(item.id);
+                        onClose();
+                      }}
+                      type="button"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </span>
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{item.shortcut}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div className="panel-card-strong mt-6 p-4 text-sm text-slate-200">
-          <p className="text-xs uppercase tracking-[0.25em] text-brand-200">Daily Loop</p>
-          <p className="mt-2 font-medium text-white">Capture fast. Review weekly. Build with conviction.</p>
-          <p className="mt-2 text-xs text-slate-300">Quick capture with <span className="font-semibold text-white">Q</span> and open evening journal with <span className="font-semibold text-white">Shift+J</span>.</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-brand-200">Shortcuts</p>
+          <p className="mt-2 font-medium text-white">Capture with Q. Journal with J. Create an agent with A.</p>
+          <p className="mt-2 text-xs text-slate-300">The AI section persists to localStorage and mirrors into a dedicated AI namespace for safe migration.</p>
         </div>
       </aside>
     </>

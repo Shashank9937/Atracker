@@ -3,24 +3,25 @@ import { Download, Keyboard, RefreshCcw, UploadCloud } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { SHORTCUTS } from '../utils/constants';
 import { getTodayKey } from '../utils/date';
+import { downloadJson } from '../utils/download';
+import { aiStorageKey, migrationKey, storageKey } from '../utils/storage';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { PageHeader } from '../components/PageHeader';
 
 export const SettingsPage = () => {
-  const { data, importState, updateSettings } = useAppContext();
+  const { data, importState, updateSettings, runStorageMerge, storageDiagnostics } = useAppContext();
   const fileInputRef = useRef(null);
   const [status, setStatus] = useState('');
 
-  const handleExport = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `founder-os-backup-${getTodayKey()}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-    setStatus('Backup exported successfully.');
+  const handleExportWorkspace = () => {
+    downloadJson(`founder-os-backup-${getTodayKey()}.json`, data);
+    setStatus('Workspace exported successfully.');
+  };
+
+  const handleExportAi = () => {
+    downloadJson(`founder-os-ai-${getTodayKey()}.json`, data.ai);
+    setStatus('AI section exported successfully.');
   };
 
   const handleImport = async (event) => {
@@ -42,7 +43,7 @@ export const SettingsPage = () => {
   return (
     <div>
       <PageHeader
-        description="Theme controls, founder identity, keyboard shortcuts, and JSON backup tools live here."
+        description="Theme controls, keyboard shortcuts, backup flows, and safe localStorage merge diagnostics live here."
         title="Settings"
       />
 
@@ -52,11 +53,7 @@ export const SettingsPage = () => {
           <div className="mt-6 space-y-5">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Founder Name</label>
-              <input
-                className="input-control"
-                onChange={(event) => updateSettings({ founderName: event.target.value || 'Founder' })}
-                value={data.settings.founderName}
-              />
+              <input className="input-control" onChange={(event) => updateSettings({ founderName: event.target.value || 'Founder' })} value={data.settings.founderName} />
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Theme</label>
@@ -73,18 +70,26 @@ export const SettingsPage = () => {
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Backup & Restore</h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Export your entire workspace to JSON or restore it from a previous backup.</p>
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Backup, Export & Merge</h2>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Export the full workspace, export only the AI section, restore a JSON backup, or rerun the safe merge helper.</p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button onClick={handleExport}>
+            <Button onClick={handleExportWorkspace}>
               <Download className="h-4 w-4" />
-              Export JSON Backup
+              Export Workspace
+            </Button>
+            <Button onClick={handleExportAi} variant="secondary">
+              <Download className="h-4 w-4" />
+              Export AI JSON
             </Button>
             <Button onClick={() => fileInputRef.current?.click()} variant="secondary">
               <UploadCloud className="h-4 w-4" />
-              Restore JSON Backup
+              Restore JSON
             </Button>
-            <input className="hidden" onChange={handleImport} ref={fileInputRef} type="file" accept="application/json" />
+            <Button onClick={runStorageMerge} variant="secondary">
+              <RefreshCcw className="h-4 w-4" />
+              Run Safe Merge
+            </Button>
+            <input accept="application/json" className="hidden" onChange={handleImport} ref={fileInputRef} type="file" />
           </div>
           {status ? <p className="mt-4 text-sm text-brand-600 dark:text-brand-200">{status}</p> : null}
         </Card>
@@ -107,21 +112,20 @@ export const SettingsPage = () => {
         <Card className="p-6">
           <div className="flex items-center gap-3">
             <RefreshCcw className="h-5 w-5 text-brand-500" />
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Workspace Snapshot</h2>
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Storage Diagnostics</h2>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {[
-              ['Daily Entries', data.dailyEntries.length],
-              ['Books', data.books.length],
-              ['Ideas', data.ideas.length],
-              ['Opportunities', data.opportunities.length],
-              ['Contacts', data.contacts.length],
-              ['Weekly Reviews', data.weeklyReviews.length],
-              ['Knowledge Items', data.knowledgeItems.length],
+              ['Workspace Key', storageKey],
+              ['AI Mirror Key', aiStorageKey],
+              ['Migration Key', migrationKey],
+              ['Namespace Keys', storageDiagnostics.keys.length],
+              ['Has Workspace', storageDiagnostics.hasWorkspace ? 'Yes' : 'No'],
+              ['Has AI Mirror', storageDiagnostics.hasAiMirror ? 'Yes' : 'No'],
             ].map(([label, value]) => (
               <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50" key={label}>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{value}</p>
+                <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{value}</p>
               </div>
             ))}
           </div>
