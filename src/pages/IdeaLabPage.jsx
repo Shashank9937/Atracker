@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowDownWideNarrow, FlaskConical, Trash2 } from 'lucide-react';
+import { ArrowDownWideNarrow, FlaskConical, Search, Target, Trash2, TrendingUp } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { IDEA_DIFFICULTY_OPTIONS, IDEA_STATUS_OPTIONS } from '../utils/constants';
 import { formatShortDate } from '../utils/date';
@@ -27,11 +27,27 @@ export const IdeaLabPage = () => {
   const { data, addIdea, deleteRecord } = useAppContext();
   const [form, setForm] = useState(initialForm);
   const [descending, setDescending] = useState(true);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
 
-  const ideas = useMemo(
-    () => [...data.ideas].sort((left, right) => (descending ? right.validationScore - left.validationScore : left.validationScore - right.validationScore)),
-    [data.ideas, descending],
-  );
+  const ideas = useMemo(() => {
+    const filtered = data.ideas.filter((idea) => {
+      const haystack = `${idea.ideaName} ${idea.problem} ${idea.targetCustomer} ${idea.uniqueInsight} ${idea.nextExperiment}`.toLowerCase();
+      const matchesQuery = haystack.includes(query.toLowerCase());
+      const matchesStatus = statusFilter === 'All' ? true : idea.status === statusFilter;
+      return matchesQuery && matchesStatus;
+    });
+
+    return filtered.sort((left, right) => (descending ? right.validationScore - left.validationScore : left.validationScore - right.validationScore));
+  }, [data.ideas, descending, query, statusFilter]);
+
+  const averageValidation = useMemo(() => {
+    if (!data.ideas.length) return 0;
+    return Math.round(data.ideas.reduce((total, idea) => total + Number(idea.validationScore || 0), 0) / data.ideas.length);
+  }, [data.ideas]);
+
+  const buildingCount = useMemo(() => data.ideas.filter((idea) => idea.status === 'Building').length, [data.ideas]);
+  const topIdea = useMemo(() => data.ideas[0], [data.ideas]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -48,9 +64,27 @@ export const IdeaLabPage = () => {
             Sort by Validation {descending ? 'High-Low' : 'Low-High'}
           </Button>
         }
-        description="A running database of startup ideas, ranked by conviction and next experiment quality."
+        description="A running database of startup ideas, ranked by conviction, clarity, and next experiment quality."
         title="Idea Lab"
       />
+
+      <div className="mb-6 grid gap-4 md:grid-cols-3">
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Ideas Tracked</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{data.ideas.length}</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Keep a healthy pipeline so exploration is never dependent on one thesis.</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Average Validation</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{averageValidation}</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{buildingCount} ideas are already in `Building` mode.</p>
+        </Card>
+        <Card className="panel-card-strong p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-brand-600 dark:text-brand-200">Top Candidate</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{topIdea?.ideaName || 'No idea yet'}</p>
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{topIdea?.nextExperiment || 'The strongest idea will surface here once you start logging them.'}</p>
+        </Card>
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
         <Card className="p-6" id="idea-form">
@@ -91,18 +125,33 @@ export const IdeaLabPage = () => {
           </form>
         </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Idea database</h2>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Track conviction, market logic, and next experiments without losing context.</p>
+        <div className="space-y-6">
+          <Card className="p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Idea database</h2>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Search, filter, and keep the strongest bets visible.</p>
+              </div>
+              <span className="badge">{ideas.length} visible</span>
             </div>
-            <span className="badge">{ideas.length} ideas</span>
-          </div>
+            <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_220px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                <input className="input-control pl-10" onChange={(event) => setQuery(event.target.value)} placeholder="Search ideas, customers, or next experiments..." value={query} />
+              </div>
+              <select className="select-control" onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
+                <option>All</option>
+                {IDEA_STATUS_OPTIONS.map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+          </Card>
+
           {ideas.length ? (
-            <div className="mt-6 space-y-4">
+            <div className="space-y-4">
               {ideas.map((idea) => (
-                <div className="rounded-3xl border border-slate-200/80 bg-white/70 p-5 dark:border-slate-800 dark:bg-slate-950/50" key={idea.id}>
+                <Card className="p-5" key={idea.id}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -117,52 +166,58 @@ export const IdeaLabPage = () => {
                       Remove
                     </button>
                   </div>
-                  <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    <div>
+
+                  <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
                       <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Target Customer</p>
                       <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.targetCustomer}</p>
                     </div>
-                    <div>
+                    <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
                       <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Market Size</p>
                       <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.marketSize}</p>
                     </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Revenue Model</p>
-                      <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.revenueModel}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Why It Matters</p>
-                      <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.whyItMatters}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Existing Solutions</p>
-                      <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.existingSolutions}</p>
-                    </div>
-                    <div>
+                    <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
                       <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Difficulty</p>
                       <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.difficulty}</p>
                     </div>
+                    <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Revenue Model</p>
+                      <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.revenueModel}</p>
+                    </div>
                   </div>
-                  <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-900/80">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Unique Insight</p>
+
+                  <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                    <div className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-brand-500" />
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Why It Matters</p>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.whyItMatters}</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4 text-brand-500" />
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Unique Insight</p>
+                      </div>
                       <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.uniqueInsight}</p>
                     </div>
-                    <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-900/80">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Next Experiment</p>
+                    <div className="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <FlaskConical className="h-4 w-4 text-brand-500" />
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Next Experiment</p>
+                      </div>
                       <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{idea.nextExperiment}</p>
                     </div>
                   </div>
+
                   <p className="mt-4 text-xs text-slate-400">Added {formatShortDate(idea.createdAt)}</p>
-                </div>
+                </Card>
               ))}
             </div>
           ) : (
-            <div className="mt-6">
-              <EmptyState copy="Log startup ideas and rank them by validation score to focus your exploration." title="No ideas yet" />
-            </div>
+            <EmptyState copy="No ideas match the current filters. Widen the search or capture a new wedge." title="No visible ideas" />
           )}
-        </Card>
+        </div>
       </div>
     </div>
   );

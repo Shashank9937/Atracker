@@ -484,6 +484,25 @@ export const Search = createIcon(
   </>,
 );
 
+export const AlertTriangle = createIcon(
+  <>
+    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+    <path d="M12 9v4" />
+    <path d="M12 17h.01" />
+  </>,
+);
+
+export const Scale = createIcon(
+  <>
+    <path d="M12 3v18" />
+    <path d="M7 21h10" />
+    <path d="M12 7 7 11" />
+    <path d="M12 7 17 11" />
+    <path d="M5 11h4l-2 4a2 2 0 0 1-2-2z" />
+    <path d="M15 11h4l-2 4a2 2 0 0 1-2-2z" />
+  </>,
+);
+
 export const Circle = createIcon(<circle cx="12" cy="12" r="10" />);
 
 export const Trophy = createIcon(

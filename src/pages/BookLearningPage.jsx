@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { BookMarked, Plus, Save, Trash2 } from 'lucide-react';
+import { BookMarked, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { BOOK_CATEGORY_OPTIONS, BOOK_STATUS_OPTIONS } from '../utils/constants';
 import { formatShortDate } from '../utils/date';
 import { createEmptyBookRecord } from '../utils/sampleData';
+import { extractTopTerms, includesQuery } from '../utils/textInsights';
 import { LineChart } from '../charts/LineChart';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -16,6 +17,9 @@ export const BookLearningPage = () => {
   const { data, bookTrends, currentBook, learningStreak, saveBook, deleteRecord, createAgentFromBook } = useAppContext();
   const [form, setForm] = useState(createEmptyBookRecord());
   const [editingId, setEditingId] = useState(null);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [categoryFilter, setCategoryFilter] = useState('All');
 
   const completedBooks = useMemo(() => data.books.filter((book) => book.status === 'Completed').length, [data.books]);
   const readingBooks = useMemo(() => data.books.filter((book) => book.status === 'Reading').length, [data.books]);
@@ -23,6 +27,28 @@ export const BookLearningPage = () => {
     if (!data.books.length) return 0;
     return (data.books.reduce((total, book) => total + Number(book.bookRating || 0), 0) / data.books.length).toFixed(1);
   }, [data.books]);
+  const topRatedBook = useMemo(
+    () => [...data.books].sort((left, right) => Number(right.bookRating || 0) - Number(left.bookRating || 0))[0],
+    [data.books],
+  );
+  const recurringThemes = useMemo(
+    () => extractTopTerms(data.books.flatMap((book) => [book.keyLessons, book.businessInsights, book.ideasToApply, book.summary]), 6),
+    [data.books],
+  );
+  const visibleBooks = useMemo(
+    () =>
+      data.books.filter((book) => {
+        const matchesStatus = statusFilter === 'All' ? true : book.status === statusFilter;
+        const matchesCategory = categoryFilter === 'All' ? true : book.category === categoryFilter;
+        const matchesQuery = includesQuery(
+          [book.bookTitle, book.author, book.category, book.keyLessons, book.businessInsights, book.actionableIdeas, book.summary],
+          query,
+        );
+
+        return matchesStatus && matchesCategory && matchesQuery;
+      }),
+    [categoryFilter, data.books, query, statusFilter],
+  );
 
   const handleField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -196,18 +222,64 @@ export const BookLearningPage = () => {
             </div>
           </Card>
 
+          <div className="grid gap-6 xl:grid-cols-2">
+            <Card className="p-6">
+              <p className="text-xs uppercase tracking-[0.25em] text-brand-500">Highest Rated</p>
+              <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">{topRatedBook?.bookTitle || 'No ratings yet'}</h3>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                {topRatedBook ? `${topRatedBook.author} • ${topRatedBook.bookRating}/10` : 'Rate finished books so the strongest signal surfaces automatically.'}
+              </p>
+              <p className="mt-4 text-sm text-slate-700 dark:text-slate-200">{topRatedBook?.businessInsights || topRatedBook?.keyLessons || 'Your strongest book insight will show up here.'}</p>
+            </Card>
+
+            <Card className="p-6">
+              <p className="text-xs uppercase tracking-[0.25em] text-brand-500">Recurring Learning Themes</p>
+              <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">What keeps showing up</h3>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {recurringThemes.length ? (
+                  recurringThemes.map((theme) => (
+                    <span className="badge" key={theme.term}>
+                      {theme.term} • {theme.count}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-slate-500 dark:text-slate-400">Add more book notes and the strongest repeated ideas will surface here.</span>
+                )}
+              </div>
+            </Card>
+          </div>
+
           <Card className="p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Book library</h2>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Every book keeps its own notes, lessons, quotes, and applied ideas.</p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Search by lesson, insight, or category so the library turns into a usable founder reference.</p>
               </div>
-              <span className="badge">{data.books.length} books</span>
+              <span className="badge">{visibleBooks.length} visible</span>
             </div>
 
-            {data.books.length ? (
+            <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_220px_220px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                <input className="input-control pl-10" onChange={(event) => setQuery(event.target.value)} placeholder="Search titles, authors, lessons, or business insights..." value={query} />
+              </div>
+              <select className="select-control" onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
+                <option>All</option>
+                {BOOK_STATUS_OPTIONS.map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+              <select className="select-control" onChange={(event) => setCategoryFilter(event.target.value)} value={categoryFilter}>
+                <option>All</option>
+                {BOOK_CATEGORY_OPTIONS.map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+
+            {visibleBooks.length ? (
               <div className="mt-6 space-y-4">
-                {data.books.map((book) => (
+                {visibleBooks.map((book) => (
                   <div
                     className={`rounded-3xl border p-5 transition ${form.id === book.id ? 'border-brand-400 bg-brand-500/10 dark:border-brand-400' : 'border-slate-200/80 bg-white/70 dark:border-slate-800 dark:bg-slate-950/50'}`}
                     key={book.id}
@@ -287,7 +359,7 @@ export const BookLearningPage = () => {
               </div>
             ) : (
               <div className="mt-6">
-                <EmptyState copy="Add books you are reading and capture the lessons that should shape how you build." title="No books yet" />
+                <EmptyState copy="No books match the current filters. Widen the search or add another title to the system." title="No visible books" />
               </div>
             )}
           </Card>
