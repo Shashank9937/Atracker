@@ -147,6 +147,8 @@ export const SettingsPage = () => {
               ['Revenue Items', data.revenuePipeline.length],
               ['Finance Snapshots', data.financeSnapshots.length],
               ['Board & Capital', data.boardItems.length],
+              ['Projects', data.projects.length],
+              ['CEO Briefs', data.inboxAutomations?.briefs?.length || 0],
               ['AI Agents', data.ai.agents.length],
               ['AI Opportunities', data.ai.opportunities.length],
               ['Knowledge Notes', data.knowledgeItems.length + data.ai.notes.length],

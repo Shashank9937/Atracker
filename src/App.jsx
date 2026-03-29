@@ -17,6 +17,8 @@ import { CustomerResearchPage } from './pages/CustomerResearchPage';
 import { RevenueEnginePage } from './pages/RevenueEnginePage';
 import { FinanceRunwayPage } from './pages/FinanceRunwayPage';
 import { BoardCapitalPage } from './pages/BoardCapitalPage';
+import { ProjectsRoadmapPage } from './pages/ProjectsRoadmapPage';
+import { FounderAutomationsPage } from './pages/FounderAutomationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AIAgentsPage } from './pages/AIAgentsPage';
 import { AIAgentBuilderPage } from './pages/AIAgentBuilderPage';
@@ -130,6 +132,8 @@ function App() {
           v: 'revenue-engine',
           f: 'finance-runway',
           c: 'board-capital',
+          k: 'projects-roadmap',
+          u: 'inbox-automations',
           g: 'ai-agents',
           l: 'ai-learning-roadmap',
           m: 'ai-agent-architect',
@@ -162,6 +166,8 @@ function App() {
     if (action === 'revenue') navigateTo('revenue-engine');
     if (action === 'finance') navigateTo('finance-runway');
     if (action === 'board') navigateTo('board-capital');
+    if (action === 'project') navigateTo('projects-roadmap', 'project-form');
+    if (action === 'briefs') navigateTo('inbox-automations');
     if (action === 'journal') setJournalOpen(true);
     if (action === 'agent') setAgentModalOpen(true);
     if (action === 'ai-opportunity') navigateTo('ai-opportunities');
@@ -209,6 +215,10 @@ function App() {
         return <FinanceRunwayPage />;
       case 'board-capital':
         return <BoardCapitalPage />;
+      case 'projects-roadmap':
+        return <ProjectsRoadmapPage />;
+      case 'inbox-automations':
+        return <FounderAutomationsPage />;
       case 'settings':
         return <SettingsPage />;
       case 'ai-agents':

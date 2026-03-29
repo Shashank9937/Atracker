@@ -52,11 +52,13 @@ import {
   createEmptyBoardItem,
   createEmptyCustomerInsight,
   createEmptyFinanceSnapshot,
+  createDefaultInboxAutomations,
+  createEmptyProject,
   createEmptyRevenueItem,
   createEmptyStrategicPlan,
   createSeedUnicornData,
 } from '../utils/unicornData';
-import { getFounderOperatingMetrics } from '../utils/unicornMetrics';
+import { generateFounderBrief, getFounderOperatingMetrics, syncFounderBriefs } from '../utils/unicornMetrics';
 
 const AppContext = createContext(null);
 const seededUnicornData = createSeedUnicornData();
@@ -355,6 +357,72 @@ const normalizeBoardItem = (item) => {
   };
 };
 
+const normalizeProject = (project) => {
+  const base = createEmptyProject();
+  return {
+    ...base,
+    ...project,
+    id: project?.id || base.id,
+    projectName: project?.projectName || '',
+    area: project?.area || base.area,
+    stage: project?.stage || base.stage,
+    linkedPlanId: project?.linkedPlanId || '',
+    objective: project?.objective || '',
+    milestone: project?.milestone || '',
+    nextStep: project?.nextStep || '',
+    blockers: project?.blockers || '',
+    dueDate: project?.dueDate || '',
+    launchDate: project?.launchDate || '',
+    progress: toNumber(project?.progress, 0),
+    impactScore: toNumber(project?.impactScore, 7),
+    confidenceScore: toNumber(project?.confidenceScore, 6),
+    successMetric: project?.successMetric || '',
+    tags: normalizeTagList(project?.tags),
+    notes: project?.notes || '',
+    createdAt: project?.createdAt || base.createdAt,
+  };
+};
+
+const normalizeFounderBrief = (brief) => ({
+  id: brief?.id || createId('brief'),
+  type: brief?.type || 'Daily CEO Brief',
+  periodKey: brief?.periodKey || getTodayKey(),
+  title: brief?.title || 'CEO Brief',
+  generatedAt: brief?.generatedAt || new Date().toISOString(),
+  summary: brief?.summary || '',
+  topPriorities: Array.isArray(brief?.topPriorities) ? brief.topPriorities.filter(Boolean) : [],
+  watchouts: Array.isArray(brief?.watchouts) ? brief.watchouts.filter(Boolean) : [],
+  wins: Array.isArray(brief?.wins) ? brief.wins.filter(Boolean) : [],
+  metrics: Array.isArray(brief?.metrics)
+    ? brief.metrics
+        .map((metric) => ({
+          label: metric?.label || '',
+          value: metric?.value || '',
+        }))
+        .filter((metric) => metric.label)
+    : [],
+});
+
+const normalizeInboxAutomations = (automations) => {
+  const base = createDefaultInboxAutomations();
+  return {
+    settings: {
+      ...base.settings,
+      ...(automations?.settings || {}),
+      autoDailyBrief: automations?.settings?.autoDailyBrief ?? base.settings.autoDailyBrief,
+      autoWeeklyBrief: automations?.settings?.autoWeeklyBrief ?? base.settings.autoWeeklyBrief,
+      dailyBriefTime: automations?.settings?.dailyBriefTime || base.settings.dailyBriefTime,
+      weeklyBriefDay: automations?.settings?.weeklyBriefDay || base.settings.weeklyBriefDay,
+      weeklyBriefTime: automations?.settings?.weeklyBriefTime || base.settings.weeklyBriefTime,
+    },
+    briefs: Array.isArray(automations?.briefs)
+      ? automations.briefs
+          .map(normalizeFounderBrief)
+          .sort((left, right) => new Date(right.generatedAt || 0) - new Date(left.generatedAt || 0))
+      : [],
+  };
+};
+
 const normalizeAiModule = (module) => {
   const base = createEmptyAiModule();
   return {
@@ -607,6 +675,10 @@ const normalizeAppData = (raw) => {
     boardItems: Array.isArray(source.boardItems)
       ? source.boardItems.map(normalizeBoardItem).sort(byFieldDesc('date'))
       : seededUnicornData.boardItems.map(normalizeBoardItem).sort(byFieldDesc('date')),
+    projects: Array.isArray(source.projects)
+      ? source.projects.map(normalizeProject).sort(byFieldDesc('dueDate'))
+      : seededUnicornData.projects.map(normalizeProject).sort(byFieldDesc('dueDate')),
+    inboxAutomations: normalizeInboxAutomations(source.inboxAutomations || seededUnicornData.inboxAutomations),
     ai: normalizeAiSection(source.ai || createEmptyAiSection()),
   };
 };
@@ -666,8 +738,14 @@ const createInitialState = () => {
         : createSeedAiSection()
       : mergeAiSection([...structuredAiPayloads, ...(legacyAiPayload ? [legacyAiPayload] : [])]);
 
-  return {
+  const mergedWorkspace = {
     ...workspace,
+    inboxAutomations: normalizeInboxAutomations(workspace.inboxAutomations || seededUnicornData.inboxAutomations),
+  };
+
+  return {
+    ...mergedWorkspace,
+    inboxAutomations: normalizeInboxAutomations(syncFounderBriefs(mergedWorkspace)),
     ai: normalizeAiSection(mergedAi),
   };
 };
@@ -686,6 +764,17 @@ export const AppProvider = ({ children }) => {
     document.documentElement.classList.toggle('dark', data.settings.theme === 'dark');
     document.documentElement.style.colorScheme = data.settings.theme;
   }, [data.settings.theme]);
+
+  useEffect(() => {
+    setData((current) => {
+      const synced = syncFounderBriefs(current);
+      if (synced === current.inboxAutomations) return current;
+      return {
+        ...current,
+        inboxAutomations: normalizeInboxAutomations(synced),
+      };
+    });
+  }, [todayKey, data.inboxAutomations?.settings?.autoDailyBrief, data.inboxAutomations?.settings?.autoWeeklyBrief]);
 
   const todayEntry = useMemo(
     () => data.dailyEntries.find((entry) => entry.date === todayKey) || createEmptyDailyEntry(todayKey),
@@ -815,6 +904,45 @@ export const AppProvider = ({ children }) => {
       ...current,
       boardItems: replaceById(current.boardItems, record, byFieldDesc('date')),
     }));
+  };
+
+  const saveProject = (project) => {
+    const record = normalizeProject(project);
+    setData((current) => ({
+      ...current,
+      projects: replaceById(current.projects, record, byFieldDesc('dueDate')),
+    }));
+  };
+
+  const updateInboxAutomationSettings = (updates) => {
+    setData((current) => ({
+      ...current,
+      inboxAutomations: normalizeInboxAutomations({
+        ...current.inboxAutomations,
+        settings: {
+          ...(current.inboxAutomations?.settings || createDefaultInboxAutomations().settings),
+          ...updates,
+        },
+      }),
+    }));
+  };
+
+  const generateFounderBriefNow = (type) => {
+    const record = normalizeFounderBrief(generateFounderBrief(type, data));
+    setData((current) => {
+      const nextRecord = normalizeFounderBrief(generateFounderBrief(type, current));
+      const filtered = (current.inboxAutomations?.briefs || []).filter(
+        (brief) => !(brief.type === nextRecord.type && brief.periodKey === nextRecord.periodKey),
+      );
+      return {
+        ...current,
+        inboxAutomations: normalizeInboxAutomations({
+          ...(current.inboxAutomations || createDefaultInboxAutomations()),
+          briefs: [nextRecord, ...filtered],
+        }),
+      };
+    });
+    return record;
   };
 
   const addEveningJournal = (journal) => {
@@ -1252,6 +1380,8 @@ export const AppProvider = ({ children }) => {
     setData((current) => ({
       ...current,
       ai,
+      projects: current.projects?.length ? current.projects : seededUnicornData.projects.map(normalizeProject).sort(byFieldDesc('dueDate')),
+      inboxAutomations: normalizeInboxAutomations(current.inboxAutomations || seededUnicornData.inboxAutomations),
     }));
     setStorageDiagnostics(getStorageDiagnostics());
   };
@@ -1321,6 +1451,7 @@ export const AppProvider = ({ children }) => {
     saveRevenueItem,
     saveFinanceSnapshot,
     saveBoardItem,
+    saveProject,
     addEveningJournal,
     addQuickCapture,
     saveAiModule,
@@ -1334,6 +1465,8 @@ export const AppProvider = ({ children }) => {
     saveAiNote,
     createLinkedDecision,
     createAgentFromBook,
+    updateInboxAutomationSettings,
+    generateFounderBriefNow,
     deleteRecord,
     deleteAiRecord,
     updateSettings,

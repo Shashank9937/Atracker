@@ -20,6 +20,7 @@ import { countCompletedTasks, countDefinedTasks, getFounderScoreBreakdown } from
 import { formatShortDate, formatTimeAgo } from '../utils/date';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { CeoBriefCard } from '../components/CeoBriefCard';
 import { DeepWorkTimer } from '../components/DeepWorkTimer';
 import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
@@ -58,6 +59,8 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
   const definedTasks = countDefinedTasks(todayEntry);
   const completedTasks = countCompletedTasks(todayEntry);
   const recentCaptures = data.quickNotes.slice(0, 4);
+  const latestDailyBrief = operatingMetrics.automationStats.latestDailyBrief;
+  const latestWeeklyBrief = operatingMetrics.automationStats.latestWeeklyBrief;
 
   const handleTaskToggle = (taskId) => {
     saveDailyEntry({
@@ -123,7 +126,7 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
               </label>
             ))}
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-4">
+          <div className="mt-6 grid gap-4 sm:grid-cols-5">
             <button className="secondary-button justify-start" onClick={() => onQuickAction('idea')} type="button">
               <Lightbulb className="h-4 w-4" />
               Add Idea
@@ -139,6 +142,10 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
             <button className="secondary-button justify-start" onClick={() => onQuickAction('contact')} type="button">
               <UserPlus className="h-4 w-4" />
               Add Contact
+            </button>
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('project')} type="button">
+              <Target className="h-4 w-4" />
+              New Project
             </button>
           </div>
         </Card>
@@ -241,6 +248,14 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Strong PMF Signals</p>
               <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.customerStats.strongSignals}</p>
             </div>
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Active Projects</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.projectStats.activeProjects}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Blocked Projects</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.projectStats.blockedProjects}</p>
+            </div>
           </div>
           <div className="mt-5 space-y-3">
             <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/50">
@@ -275,6 +290,36 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
             </button>
             <button className="secondary-button justify-start" onClick={() => onQuickAction('finance')} type="button">
               Finance & Runway
+            </button>
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('project')} type="button">
+              Projects & Launches
+            </button>
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('briefs')} type="button">
+              CEO Briefs
+            </button>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-brand-500">CEO Brief Engine</p>
+              <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Daily and weekly company summaries</h3>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">The dashboard now keeps the latest CEO brief visible so you can orient quickly before diving into execution.</p>
+            </div>
+            <Zap className="h-5 w-5 text-brand-500" />
+          </div>
+          <div className="mt-5 space-y-4">
+            {latestDailyBrief ? <CeoBriefCard brief={latestDailyBrief} compact /> : null}
+            {latestWeeklyBrief ? <CeoBriefCard brief={latestWeeklyBrief} compact /> : null}
+            {!latestDailyBrief && !latestWeeklyBrief ? (
+              <EmptyState copy="Generate your first local CEO brief from Inbox Automations." title="No CEO briefs yet" />
+            ) : null}
+          </div>
+          <div className="mt-5">
+            <button className="secondary-button w-full justify-center" onClick={() => onQuickAction('briefs')} type="button">
+              <ArrowUpRight className="h-4 w-4" />
+              Open Inbox Automations
             </button>
           </div>
         </Card>

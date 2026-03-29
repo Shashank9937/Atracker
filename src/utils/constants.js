@@ -15,6 +15,8 @@ export const NAV_ITEMS = [
   { id: 'revenue-engine', label: 'Revenue Engine', shortcut: 'Alt+V', section: 'Unicorn Ops' },
   { id: 'finance-runway', label: 'Finance & Runway', shortcut: 'Alt+F', section: 'Unicorn Ops' },
   { id: 'board-capital', label: 'Board & Capital', shortcut: 'Alt+C', section: 'Unicorn Ops' },
+  { id: 'projects-roadmap', label: 'Projects & Launches', shortcut: 'Alt+K', section: 'Unicorn Ops' },
+  { id: 'inbox-automations', label: 'Inbox Automations', shortcut: 'Alt+U', section: 'Unicorn Ops' },
   { id: 'ai-agents', label: 'AI Overview', shortcut: 'Alt+G', section: 'AI Agents' },
   { id: 'ai-learning-roadmap', label: 'AI Learning Roadmap', shortcut: 'Alt+L', section: 'AI Agents' },
   { id: 'ai-agent-builder', label: 'AI Agent Builder', shortcut: 'A', section: 'AI Agents' },
@@ -55,6 +57,9 @@ export const REVENUE_CHANNEL_OPTIONS = ['Lead', 'Pilot', 'Partnership', 'Expansi
 export const REVENUE_STAGE_OPTIONS = ['Prospect', 'Discovery', 'Proposal', 'Negotiation', 'Won', 'Lost'];
 export const BOARD_ENTRY_TYPES = ['Investor Update', 'Board Meeting', 'Fundraise'];
 export const BOARD_STATUS_OPTIONS = ['Draft', 'Scheduled', 'Sent', 'Open', 'Closed', 'Paused'];
+export const PROJECT_AREA_OPTIONS = ['Product', 'GTM', 'Customer Success', 'Operations', 'Finance', 'Fundraising', 'Hiring', 'Platform'];
+export const PROJECT_STAGE_OPTIONS = ['Backlog', 'In Progress', 'Blocked', 'Ready to Launch', 'Launched'];
+export const WEEKDAY_OPTIONS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export const SHORTCUTS = [
   { keys: 'Q', action: 'Open quick capture from anywhere outside inputs' },
@@ -62,7 +67,7 @@ export const SHORTCUTS = [
   { keys: 'A', action: 'Open the new agent modal' },
   { keys: 'Alt+I', action: 'Open the Founder Inbox / command center' },
   { keys: 'Alt+1 ... Alt+0', action: 'Jump between core Founder OS pages' },
-  { keys: 'Alt+S / R / V / F / C', action: 'Jump across strategy, research, revenue, finance, and board/capital' },
+  { keys: 'Alt+S / R / V / F / C / K / U', action: 'Jump across strategy, research, revenue, finance, board/capital, projects, and inbox automations' },
   { keys: 'Alt+G / L / M / E / T / O / N / P', action: 'Jump across AI overview, roadmap, architect, experiments, tools, opportunities, notes, and analytics' },
   { keys: 'Esc', action: 'Close any open modal or mobile sidebar' },
 ];

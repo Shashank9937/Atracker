@@ -16,10 +16,11 @@ import {
   Users,
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { addDays, formatShortDate, parseDateKey } from '../utils/date';
+import { formatShortDate, parseDateKey } from '../utils/date';
 import { countCompletedTasks, countDefinedTasks } from '../utils/metrics';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { CeoBriefCard } from '../components/CeoBriefCard';
 import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
 
@@ -45,6 +46,7 @@ const buildActionQueue = ({
   modulesInProgress,
   overdueFollowUps,
   pendingPracticeTasks,
+  projectStats,
   revenueStats,
   strategyStats,
   todayEntry,
@@ -104,6 +106,36 @@ const buildActionQueue = ({
       anchorId: 'book-form',
       actionLabel: 'Open Book Learning',
     });
+  }
+
+  if (projectStats.blockedProjects) {
+    const blockedProject = projectStats.topProjects.find((project) => project.stage === 'Blocked');
+    actions.push({
+      id: blockedProject ? `project-blocked-${blockedProject.id}` : 'project-blocked',
+      tone: 'critical',
+      area: 'Projects',
+      title: blockedProject ? `Unblock ${blockedProject.projectName}` : 'Unblock a project bottleneck',
+      detail: blockedProject?.blockers || blockedProject?.nextStep || 'A core project is blocked and needs founder intervention.',
+      actionKind: 'navigate',
+      page: 'projects-roadmap',
+      actionLabel: 'Open Projects',
+    });
+  }
+
+  if (projectStats.launchReady || projectStats.dueSoon?.[0]) {
+    const launchProject = projectStats.launchThisWeek?.[0] || projectStats.dueSoon?.[0] || projectStats.topProjects?.[0];
+    if (launchProject) {
+      actions.push({
+        id: `project-launch-${launchProject.id}`,
+        tone: 'important',
+        area: 'Launch',
+        title: `Move ${launchProject.projectName}`,
+        detail: launchProject.nextStep || launchProject.milestone || 'A near-term project needs a push toward launch.',
+        actionKind: 'navigate',
+        page: 'projects-roadmap',
+        actionLabel: 'Open Roadmap',
+      });
+    }
   }
 
   if (financeStats.atRisk) {
@@ -333,6 +365,8 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
   );
 
   const latestReview = data.weeklyReviews[0];
+  const latestDailyBrief = operatingMetrics.automationStats.latestDailyBrief;
+  const latestWeeklyBrief = operatingMetrics.automationStats.latestWeeklyBrief;
   const definedTasks = countDefinedTasks(todayEntry);
   const completedTasks = countCompletedTasks(todayEntry);
   const reviewsDueCount = overdueFollowUps.length + dueDecisions.length;
@@ -354,6 +388,7 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
         modulesInProgress,
         overdueFollowUps,
         pendingPracticeTasks,
+        projectStats: operatingMetrics.projectStats,
         revenueStats: operatingMetrics.revenueStats,
         strategyStats: operatingMetrics.strategyStats,
         todayEntry,
@@ -614,6 +649,30 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
           <Card className="p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-brand-500">CEO Briefs</p>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Daily and weekly operating summaries</h3>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">These are generated from the live state of the company inside Founder OS.</p>
+              </div>
+              <Sparkles className="h-5 w-5 text-brand-500" />
+            </div>
+            <div className="mt-5 space-y-4">
+              {latestDailyBrief ? <CeoBriefCard brief={latestDailyBrief} compact /> : null}
+              {latestWeeklyBrief ? <CeoBriefCard brief={latestWeeklyBrief} compact /> : null}
+              {!latestDailyBrief && !latestWeeklyBrief ? (
+                <EmptyState copy="Open Inbox Automations to generate your first daily and weekly CEO briefs." title="No CEO briefs yet" />
+              ) : null}
+            </div>
+            <div className="mt-4">
+              <Button className="w-full" onClick={() => onQuickAction('briefs')} variant="secondary">
+                <ArrowUpRight className="h-4 w-4" />
+                Open Inbox Automations
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
                 <p className="text-xs uppercase tracking-[0.25em] text-brand-500">Active Idea</p>
                 <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">{activeIdea?.ideaName || 'No active idea'}</h3>
               </div>
@@ -660,6 +719,14 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Upcoming Board Items</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.boardStats.upcomingItems.length}</p>
               </div>
+              <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Active Projects</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.projectStats.activeProjects}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Blocked Projects</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.projectStats.blockedProjects}</p>
+              </div>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Button onClick={() => onQuickAction('strategy')} variant="secondary">
@@ -673,6 +740,12 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
               </Button>
               <Button onClick={() => onQuickAction('board')} variant="secondary">
                 Open Board & Capital
+              </Button>
+              <Button onClick={() => onQuickAction('project')} variant="secondary">
+                Open Projects
+              </Button>
+              <Button onClick={() => onQuickAction('briefs')} variant="secondary">
+                Open Briefs
               </Button>
             </div>
           </Card>

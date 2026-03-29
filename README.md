@@ -23,6 +23,8 @@ npm run preview
 - Daily execution tracker with calendar view and book-learning fields
 - Book Learning, Idea Lab, Opportunity Radar, Networking CRM, Weekly Review, Decision Journal, Knowledge Vault
 - Unicorn founder operating layers: Company Strategy, Customer Research, Revenue Engine, Finance & Runway, Board & Capital
+- Projects / Roadmap / Launch Tracker for active company work, blockers, milestones, and launch windows
+- Founder Inbox Automations for local-only daily and weekly CEO briefs generated from the app state
 - KPI analytics and a dedicated AI analytics section
 - Quick capture with `Q`
 - Evening journal with `J`
@@ -78,7 +80,17 @@ The Settings page includes:
 - a manual `Run Safe Merge` action
 - a workspace snapshot covering founder, AI, and unicorn-scale operating modules
 
+## Projects & CEO Briefs
+
+- `Projects & Launch Tracker` stores project data inside `founder-os::workspace` as `data.projects`
+- `Inbox Automations` stores local brief settings and generated CEO brief history inside `founder-os::workspace` as `data.inboxAutomations`
+- Daily and weekly CEO briefs are frontend-only summaries generated from the current local app state
+- Auto-generation happens when the app loads or syncs locally with automation settings enabled
+- You can also generate a daily or weekly CEO brief manually from the `Inbox Automations` page
+- Brief archives and projects can be exported as JSON directly from the UI
+
 ## Notes
 
 - No backend is required.
 - All AI features are design, planning, analytics, and note-taking tools only. No external APIs are called.
+- Founder Inbox automations are local browser automations, not server-side scheduled jobs.

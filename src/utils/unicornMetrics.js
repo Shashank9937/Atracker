@@ -1,5 +1,6 @@
-import { addDays, formatShortDate, getTodayKey, parseDateKey, toDateKey } from './date';
+import { addDays, formatShortDate, getTodayKey, getWeekNumber, parseDateKey, startOfWeek, toDateKey } from './date';
 import { extractTopTerms } from './textInsights';
+import { calculateFounderScore, countCompletedTasks, getLearningStreak, getThisWeekSnapshot } from './metrics';
 
 const toNumber = (value, fallback = 0) => {
   const parsed = Number(value);
@@ -57,6 +58,58 @@ export const buildBoardTypeChart = (boardItems) => {
   };
 };
 
+export const getWeekKey = (value = getTodayKey()) => {
+  const date = value instanceof Date ? value : parseDateKey(value);
+  return `${date.getFullYear()}-W${String(getWeekNumber(date)).padStart(2, '0')}`;
+};
+
+export const buildProjectStageChart = (projects) => {
+  const labels = ['Backlog', 'In Progress', 'Blocked', 'Ready to Launch', 'Launched'];
+  return {
+    labels,
+    data: labels.map((label) => projects.filter((project) => project.stage === label).length),
+  };
+};
+
+const buildProjectStats = (projects) => {
+  const today = parseDateKey(getTodayKey());
+  const activeProjects = projects.filter((project) => !['Launched'].includes(project.stage));
+  const blockedProjects = projects.filter((project) => project.stage === 'Blocked');
+  const launchReady = projects.filter((project) => project.stage === 'Ready to Launch');
+  const dueSoon = activeProjects.filter((project) => {
+    if (!project.dueDate) return false;
+    const dueDate = parseDateKey(project.dueDate);
+    return dueDate >= today && dueDate <= addDays(today, 14);
+  });
+  const launchThisWeek = projects.filter((project) => {
+    if (!project.launchDate) return false;
+    const launchDate = parseDateKey(project.launchDate);
+    return launchDate >= startOfWeek(today) && launchDate <= addDays(startOfWeek(today), 6);
+  });
+
+  return {
+    totalProjects: projects.length,
+    activeProjects: activeProjects.length,
+    blockedProjects: blockedProjects.length,
+    launchReady: launchReady.length,
+    dueSoon,
+    launchThisWeek,
+    topProjects: [...activeProjects]
+      .sort((left, right) => toNumber(right.impactScore, 0) * 100 + toNumber(right.progress, 0) - (toNumber(left.impactScore, 0) * 100 + toNumber(left.progress, 0)))
+      .slice(0, 4),
+  };
+};
+
+const buildAutomationStats = (inboxAutomations) => {
+  const briefs = inboxAutomations?.briefs || [];
+  return {
+    briefCount: briefs.length,
+    latestDailyBrief: briefs.find((brief) => brief.type === 'Daily CEO Brief') || null,
+    latestWeeklyBrief: briefs.find((brief) => brief.type === 'Weekly CEO Brief') || null,
+    settings: inboxAutomations?.settings || {},
+  };
+};
+
 export const getFounderOperatingMetrics = (data) => {
   const today = parseDateKey(getTodayKey());
   const strategicPlans = [...(data.strategicPlans || [])].sort((left, right) => sortByNewest(left, right, 'createdAt'));
@@ -64,6 +117,7 @@ export const getFounderOperatingMetrics = (data) => {
   const revenuePipeline = [...(data.revenuePipeline || [])].sort((left, right) => sortByNewest(left, right, 'expectedCloseDate'));
   const financeSnapshots = [...(data.financeSnapshots || [])].sort((left, right) => sortByNewest(left, right, 'snapshotDate'));
   const boardItems = [...(data.boardItems || [])].sort((left, right) => sortByNewest(left, right, 'date'));
+  const projects = [...(data.projects || [])].sort((left, right) => sortByNewest(left, right, 'dueDate'));
 
   const activePlan = strategicPlans.find((plan) => plan.status === 'Active') || strategicPlans[0] || null;
   const atRiskPlans = strategicPlans.filter((plan) => plan.status === 'At Risk' || toNumber(plan.progress, 0) < 40 || toNumber(plan.confidence, 0) <= 4);
@@ -155,6 +209,9 @@ export const getFounderOperatingMetrics = (data) => {
         .sort((left, right) => toNumber(right.interestLevel, 0) - toNumber(left.interestLevel, 0))[0] || null,
   };
 
+  const projectStats = buildProjectStats(projects);
+  const automationStats = buildAutomationStats(data.inboxAutomations);
+
   const founderScaleScore = Math.max(
     0,
     Math.min(
@@ -164,7 +221,8 @@ export const getFounderOperatingMetrics = (data) => {
           Math.min(customerStats.strongSignals * 18, 30) +
           Math.min(revenueStats.weightedPipeline / 1000, 20) +
           Math.min(financeStats.runwayMonths * 1.5, 20) +
-          Math.min(boardStats.upcomingItems.length * 5, 5),
+          Math.min(boardStats.upcomingItems.length * 5, 5) +
+          Math.min(projectStats.launchReady * 3, 6),
       ),
     ),
   );
@@ -175,15 +233,19 @@ export const getFounderOperatingMetrics = (data) => {
     revenueStats,
     financeStats,
     boardStats,
+    projectStats,
+    automationStats,
     founderScaleScore,
     runwayTrend: buildRunwayTrend(financeSnapshots),
     revenueStageChart: buildRevenueStageChart(revenuePipeline),
     pmfSignalChart: buildPmfSignalChart(customerResearch),
     boardTypeChart: buildBoardTypeChart(boardItems),
+    projectStageChart: buildProjectStageChart(projects),
     topPriorityRisks: [
       ...(financeStats.atRisk ? [{ area: 'Finance', title: `Runway is ${runwayMonths} months`, detail: 'Extend runway or improve revenue coverage.' }] : []),
       ...atRiskPlans.slice(0, 2).map((plan) => ({ area: 'Strategy', title: plan.planName, detail: plan.risks || 'Plan is at risk and needs a reset.' })),
       ...overdueBoardItems.slice(0, 2).map((item) => ({ area: item.entryType, title: item.title, detail: item.asks || item.notes || 'Next action is overdue.' })),
+      ...projectStats.topProjects.filter((project) => project.stage === 'Blocked').slice(0, 2).map((project) => ({ area: 'Project', title: project.projectName, detail: project.blockers || 'A project is blocked and needs founder intervention.' })),
     ].slice(0, 5),
   };
 };
@@ -205,4 +267,134 @@ export const getUpcomingCloseLabel = (date) => {
   if (diff === 0) return 'Today';
   if (diff > 0) return `In ${diff}d`;
   return `${Math.abs(diff)}d ago`;
+};
+
+const createBriefId = (prefix) =>
+  globalThis.crypto?.randomUUID
+    ? `${prefix}-${globalThis.crypto.randomUUID()}`
+    : `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+
+const uniqueList = (items) => [...new Set(items.filter(Boolean))];
+
+export const generateFounderBrief = (type, data) => {
+  const todayKey = getTodayKey();
+  const operatingMetrics = getFounderOperatingMetrics(data);
+  const todayEntry = data.dailyEntries.find((entry) => entry.date === todayKey);
+  const currentBook = data.books.find((book) => book.status === 'Reading') || null;
+  const weekSnapshot = getThisWeekSnapshot(data);
+  const learningStreak = getLearningStreak(data.dailyEntries);
+  const incompleteTasks = (todayEntry?.missionTasks || []).filter((task) => task.text?.trim() && !task.done);
+  const dueDecisions = (data.decisions || []).filter((decision) => decision.reviewDate && parseDateKey(decision.reviewDate) <= parseDateKey(todayKey) && !decision.actualOutcome);
+  const overdueFollowUps = (data.contacts || []).filter((contact) => contact.followUpDate && parseDateKey(contact.followUpDate) < parseDateKey(todayKey));
+  const blockedProjects = operatingMetrics.projectStats.topProjects.filter((project) => project.stage === 'Blocked');
+  const nearCloseDeals = operatingMetrics.revenueStats.nearCloseDeals;
+  const activePlan = operatingMetrics.strategyStats.activePlan;
+
+  if (type === 'Daily CEO Brief') {
+    const priorities = uniqueList([
+      ...incompleteTasks.map((task) => task.text),
+      nearCloseDeals[0]?.nextStep,
+      blockedProjects[0]?.nextStep || blockedProjects[0]?.blockers,
+      operatingMetrics.boardStats.upcomingItems[0]?.asks || operatingMetrics.boardStats.upcomingItems[0]?.notes,
+      activePlan?.topPriorities?.split('\n')?.[0],
+    ]).slice(0, 5);
+
+    const watchouts = uniqueList([
+      operatingMetrics.financeStats.atRisk ? `Runway is ${operatingMetrics.financeStats.runwayMonths} months.` : '',
+      blockedProjects[0]?.blockers,
+      operatingMetrics.customerStats.recentInterviews < 2 ? 'Customer signal is getting stale this week.' : '',
+      dueDecisions[0]?.decision ? `Decision review due: ${dueDecisions[0].decision}` : '',
+      overdueFollowUps[0]?.name ? `Relationship overdue: ${overdueFollowUps[0].name}` : '',
+    ]).slice(0, 4);
+
+    const wins = uniqueList([
+      todayEntry?.winOfDay,
+      operatingMetrics.revenueStats.committedRevenue ? `Committed revenue stands at ${currency(operatingMetrics.revenueStats.committedRevenue)}.` : '',
+      currentBook?.bookTitle ? `Learning streak is ${learningStreak} days with ${currentBook.bookTitle} active.` : '',
+      weekSnapshot.tasksCompleted ? `${weekSnapshot.tasksCompleted} mission tasks completed this week.` : '',
+    ]).slice(0, 4);
+
+    return {
+      id: createBriefId('brief'),
+      type,
+      periodKey: todayKey,
+      title: `Daily CEO Brief • ${formatShortDate(todayKey)}`,
+      generatedAt: new Date().toISOString(),
+      summary: `Protect the company by focusing on execution, customer signal, revenue movement, and capital discipline today.`,
+      topPriorities: priorities,
+      watchouts,
+      wins,
+      metrics: [
+        { label: 'Founder Score', value: String(calculateFounderScore(todayEntry)) },
+        { label: 'Runway', value: `${operatingMetrics.financeStats.runwayMonths} mo` },
+        { label: 'Weighted Pipeline', value: currency(operatingMetrics.revenueStats.weightedPipeline) },
+        { label: 'Learning Streak', value: `${learningStreak}d` },
+      ],
+    };
+  }
+
+  const weekKey = getWeekKey(todayKey);
+  const weeklyPriorities = uniqueList([
+    activePlan?.topPriorities?.split('\n')?.[0],
+    activePlan?.topPriorities?.split('\n')?.[1],
+    nearCloseDeals[0]?.nextStep,
+    operatingMetrics.projectStats.launchThisWeek[0]?.nextStep,
+    operatingMetrics.boardStats.upcomingItems[0]?.asks || operatingMetrics.boardStats.upcomingItems[0]?.notes,
+  ]).slice(0, 5);
+
+  const weeklyWatchouts = uniqueList([
+    operatingMetrics.financeStats.atRisk ? `Runway is ${operatingMetrics.financeStats.runwayMonths} months.` : '',
+    blockedProjects[0]?.projectName ? `${blockedProjects[0].projectName} is blocked.` : '',
+    operatingMetrics.customerStats.recentInterviews < 3 ? 'Interview volume is too low for clean PMF signal.' : '',
+    operatingMetrics.strategyStats.atRiskList[0]?.planName ? `${operatingMetrics.strategyStats.atRiskList[0].planName} is at risk.` : '',
+  ]).slice(0, 4);
+
+  const weeklyWins = uniqueList([
+    weekSnapshot.deepWorkHours ? `${weekSnapshot.deepWorkHours} hours of deep work logged this week.` : '',
+    weekSnapshot.tasksCompleted ? `${weekSnapshot.tasksCompleted} mission tasks completed this week.` : '',
+    operatingMetrics.revenueStats.committedRevenue ? `${currency(operatingMetrics.revenueStats.committedRevenue)} in won revenue is now in the system.` : '',
+    operatingMetrics.projectStats.launchReady ? `${operatingMetrics.projectStats.launchReady} project(s) are ready to launch.` : '',
+  ]).slice(0, 4);
+
+  return {
+    id: createBriefId('brief'),
+    type,
+    periodKey: weekKey,
+    title: `Weekly CEO Brief • ${weekKey}`,
+    generatedAt: new Date().toISOString(),
+    summary: `This week's CEO view centers on product shipping, PMF freshness, pipeline conversion, and capital readiness.`,
+    topPriorities: weeklyPriorities,
+    watchouts: weeklyWatchouts,
+    wins: weeklyWins,
+    metrics: [
+      { label: 'Deep Work', value: `${weekSnapshot.deepWorkHours}h` },
+      { label: 'Recent Interviews', value: String(operatingMetrics.customerStats.recentInterviews) },
+      { label: 'Weighted Pipeline', value: currency(operatingMetrics.revenueStats.weightedPipeline) },
+      { label: 'Runway', value: `${operatingMetrics.financeStats.runwayMonths} mo` },
+    ],
+  };
+};
+
+export const syncFounderBriefs = (data) => {
+  const automations = data.inboxAutomations || { settings: {}, briefs: [] };
+  const settings = automations.settings || {};
+  const briefs = automations.briefs || [];
+  const todayKey = getTodayKey();
+  const weekKey = getWeekKey(todayKey);
+
+  let nextBriefs = briefs;
+
+  if (settings.autoDailyBrief && !briefs.some((brief) => brief.type === 'Daily CEO Brief' && brief.periodKey === todayKey)) {
+    nextBriefs = [generateFounderBrief('Daily CEO Brief', data), ...nextBriefs];
+  }
+
+  if (settings.autoWeeklyBrief && !nextBriefs.some((brief) => brief.type === 'Weekly CEO Brief' && brief.periodKey === weekKey)) {
+    nextBriefs = [generateFounderBrief('Weekly CEO Brief', data), ...nextBriefs];
+  }
+
+  if (nextBriefs === briefs) return automations;
+  return {
+    ...automations,
+    briefs: nextBriefs.slice(0, 60),
+  };
 };
