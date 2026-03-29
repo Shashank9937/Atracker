@@ -1,4 +1,5 @@
 export const NAV_ITEMS = [
+  { id: 'founder-inbox', label: 'Founder Inbox', shortcut: 'Alt+I', section: 'Founder OS' },
   { id: 'dashboard', label: 'Dashboard', shortcut: 'Alt+1', section: 'Founder OS' },
   { id: 'daily-execution', label: 'Daily Execution', shortcut: 'Alt+2', section: 'Founder OS' },
   { id: 'book-learning', label: 'Book Learning', shortcut: 'Alt+B', section: 'Founder OS' },
@@ -47,6 +48,7 @@ export const SHORTCUTS = [
   { keys: 'Q', action: 'Open quick capture from anywhere outside inputs' },
   { keys: 'J', action: 'Open evening journal modal' },
   { keys: 'A', action: 'Open the new agent modal' },
+  { keys: 'Alt+I', action: 'Open the Founder Inbox / command center' },
   { keys: 'Alt+1 ... Alt+0', action: 'Jump between core Founder OS pages' },
   { keys: 'Alt+G / L / M / E / T / O / N / P', action: 'Jump across AI overview, roadmap, architect, experiments, tools, opportunities, notes, and analytics' },
   { keys: 'Esc', action: 'Close any open modal or mobile sidebar' },

@@ -25,6 +25,7 @@ import { NAV_ITEMS } from '../utils/constants';
 import { cn } from '../utils/cn';
 
 const icons = {
+  'founder-inbox': Layout,
   dashboard: Home,
   'daily-execution': Activity,
   'book-learning': BookMarked,

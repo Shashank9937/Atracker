@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAppContext } from './context/AppContext';
 import { NAV_ITEMS } from './utils/constants';
+import { FounderInboxPage } from './pages/FounderInboxPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DailyExecutionPage } from './pages/DailyExecutionPage';
 import { BookLearningPage } from './pages/BookLearningPage';
@@ -27,7 +28,7 @@ import { QuickCaptureModal } from './components/QuickCaptureModal';
 import { EveningJournalModal } from './components/EveningJournalModal';
 import { AgentQuickCreateModal } from './components/AgentQuickCreateModal';
 
-const DEFAULT_PAGE = 'dashboard';
+const DEFAULT_PAGE = 'founder-inbox';
 
 const PAGE_ALIASES = {
   'ai-agents/builder': 'ai-agent-builder',
@@ -107,6 +108,7 @@ function App() {
 
       if (event.altKey) {
         const map = {
+          i: 'founder-inbox',
           1: 'dashboard',
           2: 'daily-execution',
           3: 'idea-lab',
@@ -155,6 +157,15 @@ function App() {
 
   const renderPage = () => {
     switch (activePage) {
+      case 'founder-inbox':
+        return (
+          <FounderInboxPage
+            onNavigate={navigateTo}
+            onOpenJournal={() => setJournalOpen(true)}
+            onOpenQuickCapture={() => setQuickCaptureOpen(true)}
+            onQuickAction={handleQuickAction}
+          />
+        );
       case 'daily-execution':
         return <DailyExecutionPage />;
       case 'book-learning':
