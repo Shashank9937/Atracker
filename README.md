@@ -19,8 +19,10 @@ npm run preview
 ## Core Product
 
 - Dashboard command center with founder score, deep work timer, notes, follow-ups, current book, and AI leverage progress
+- Founder Inbox as the default command center for daily priorities across execution, learning, GTM, finance, and AI leverage
 - Daily execution tracker with calendar view and book-learning fields
 - Book Learning, Idea Lab, Opportunity Radar, Networking CRM, Weekly Review, Decision Journal, Knowledge Vault
+- Unicorn founder operating layers: Company Strategy, Customer Research, Revenue Engine, Finance & Runway, Board & Capital
 - KPI analytics and a dedicated AI analytics section
 - Quick capture with `Q`
 - Evening journal with `J`
@@ -64,8 +66,9 @@ On load, the app:
 1. Reads the main workspace key.
 2. Reads the mirrored AI section key.
 3. Scans existing `founder-os::` namespace keys.
-4. Safely merges AI structures into the current workspace without deleting existing user data.
-5. Migrates legacy `aiAgents` data into the new `data.ai.agents` structure.
+4. Safely preserves existing workspace data and fills in any missing structures for new sections such as AI and Unicorn Ops.
+5. Safely merges AI structures into the current workspace without deleting existing user data.
+6. Migrates legacy `aiAgents` data into the new `data.ai.agents` structure.
 
 The Settings page includes:
 
@@ -73,6 +76,7 @@ The Settings page includes:
 - AI-only JSON export
 - JSON restore
 - a manual `Run Safe Merge` action
+- a workspace snapshot covering founder, AI, and unicorn-scale operating modules
 
 ## Notes
 

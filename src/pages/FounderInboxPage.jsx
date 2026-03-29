@@ -33,15 +33,20 @@ const pluralize = (count, singular, plural = `${singular}s`) => `${count} ${coun
 
 const buildActionQueue = ({
   activeIdea,
+  boardStats,
+  customerStats,
   currentBook,
   dueDecisions,
   experimentsNeedingIteration,
+  financeStats,
   highLeverageAi,
   incompleteTasks,
   latestReview,
   modulesInProgress,
   overdueFollowUps,
   pendingPracticeTasks,
+  revenueStats,
+  strategyStats,
   todayEntry,
 }) => {
   const actions = [];
@@ -98,6 +103,74 @@ const buildActionQueue = ({
       page: 'book-learning',
       anchorId: 'book-form',
       actionLabel: 'Open Book Learning',
+    });
+  }
+
+  if (financeStats.atRisk) {
+    actions.push({
+      id: 'runway-risk',
+      tone: 'critical',
+      area: 'Finance',
+      title: `Runway is at ${financeStats.runwayMonths} months`,
+      detail: `Target runway is ${financeStats.targetRunwayMonths} months. Tighten burn or grow revenue coverage.`,
+      actionKind: 'navigate',
+      page: 'finance-runway',
+      actionLabel: 'Open Finance',
+    });
+  }
+
+  if (revenueStats.nearCloseDeals[0]) {
+    actions.push({
+      id: `revenue-${revenueStats.nearCloseDeals[0].id}`,
+      tone: 'important',
+      area: 'Revenue',
+      title: `Advance ${revenueStats.nearCloseDeals[0].accountName}`,
+      detail: revenueStats.nearCloseDeals[0].nextStep || 'A near-close deal needs a decisive next move.',
+      actionKind: 'navigate',
+      page: 'revenue-engine',
+      actionLabel: 'Open Revenue',
+    });
+  }
+
+  if (customerStats.recentInterviews < 2) {
+    actions.push({
+      id: 'pmf-freshness',
+      tone: 'important',
+      area: 'PMF',
+      title: 'Refresh customer signal this week',
+      detail: 'Recent interview volume is low. Fresh customer evidence should guide product and GTM decisions.',
+      actionKind: 'navigate',
+      page: 'customer-research',
+      actionLabel: 'Open Research',
+    });
+  }
+
+  if (strategyStats.atRiskList?.[0]) {
+    actions.push({
+      id: `strategy-${strategyStats.atRiskList[0].id}`,
+      tone: 'important',
+      area: 'Strategy',
+      title: `Reset ${strategyStats.atRiskList[0].planName}`,
+      detail: strategyStats.atRiskList[0].risks || 'The current plan is underpowered or drifting.',
+      actionKind: 'navigate',
+      page: 'company-strategy',
+      actionLabel: 'Open Strategy',
+    });
+  }
+
+  if (boardStats.overdueItems || boardStats.upcomingItems[0]) {
+    const boardItem = boardStats.upcomingItems[0];
+    actions.push({
+      id: boardItem ? `board-${boardItem.id}` : 'board-overdue',
+      tone: boardStats.overdueItems ? 'critical' : 'important',
+      area: 'Board & Capital',
+      title: boardStats.overdueItems ? 'Clear overdue capital follow-ups' : `Prepare ${boardItem.title}`,
+      detail: boardStats.overdueItems
+        ? 'Board and investor relationships lose value fast when follow-ups go stale.'
+        : boardItem.asks || boardItem.notes || 'Upcoming board or investor moment needs preparation.',
+      actionKind: 'navigate',
+      page: 'board-capital',
+      actionLabel: 'Open Board & Capital',
     });
   }
 
@@ -190,6 +263,7 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
     todayEntry,
     founderScore,
     founderLeverage,
+    operatingMetrics,
     learningStreak,
     upcomingFollowUps,
     latestInsights,
@@ -268,19 +342,25 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
     () =>
       buildActionQueue({
         activeIdea,
+        boardStats: operatingMetrics.boardStats,
+        customerStats: operatingMetrics.customerStats,
         currentBook,
         dueDecisions,
         experimentsNeedingIteration,
+        financeStats: operatingMetrics.financeStats,
         highLeverageAi,
         incompleteTasks,
         latestReview,
         modulesInProgress,
         overdueFollowUps,
         pendingPracticeTasks,
+        revenueStats: operatingMetrics.revenueStats,
+        strategyStats: operatingMetrics.strategyStats,
         todayEntry,
       }),
     [
       activeIdea,
+      operatingMetrics,
       currentBook,
       dueDecisions,
       experimentsNeedingIteration,
@@ -318,11 +398,14 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
 
     if (incompleteTasks.length) parts.push(`finish ${pluralize(incompleteTasks.length, 'mission task')}`);
     if (reviewsDueCount) parts.push(`clear ${pluralize(reviewsDueCount, 'review item')}`);
+    if (operatingMetrics.financeStats.atRisk) parts.push('protect runway');
+    if (operatingMetrics.customerStats.recentInterviews < 2) parts.push('refresh customer signal');
+    if (operatingMetrics.revenueStats.nearCloseDeals.length) parts.push(`move ${pluralize(operatingMetrics.revenueStats.nearCloseDeals.length, 'deal')} toward close`);
     if (experimentsNeedingIteration.length) parts.push(`move ${pluralize(experimentsNeedingIteration.length, 'experiment')} forward`);
     if (!parts.length) return 'The system is clear. Use today to compound deep work, learning, and high-leverage decisions.';
 
     return `Today the system wants you to ${parts.join(', ')}.`;
-  }, [experimentsNeedingIteration.length, incompleteTasks.length, reviewsDueCount]);
+  }, [experimentsNeedingIteration.length, incompleteTasks.length, operatingMetrics.customerStats.recentInterviews, operatingMetrics.financeStats.atRisk, operatingMetrics.revenueStats.nearCloseDeals.length, reviewsDueCount]);
 
   return (
     <div className="space-y-6">
@@ -357,12 +440,15 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
         <div className="mt-5 flex flex-wrap gap-2">
           <span className="badge">Founder Score {founderScore}</span>
           <span className="badge">Founder Leverage {founderLeverage}</span>
+          <span className="badge">Scale Score {operatingMetrics.founderScaleScore}</span>
+          <span className="badge">{operatingMetrics.financeStats.runwayMonths} mo runway</span>
+          <span className="badge">${Math.round(operatingMetrics.revenueStats.weightedPipeline / 1000)}k weighted pipeline</span>
           <span className="badge">{thisWeekSnapshot.deepWorkHours}h deep work this week</span>
           <span className="badge">{aiStats.weeklyHoursSaved} hrs/week saved</span>
         </div>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card className="p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Critical Queue</p>
           <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{inboxActions.filter((item) => item.tone !== 'normal').length}</p>
@@ -379,9 +465,14 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
           <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Pending AI practice tasks plus today’s reading gap.</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Hours Saved / Week</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{aiStats.weeklyHoursSaved}</p>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Leverage already designed into your AI agents and opportunities.</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Runway</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.financeStats.runwayMonths} mo</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Capital buffer relative to your current net burn.</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Weighted Pipeline</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">${Math.round(operatingMetrics.revenueStats.weightedPipeline / 1000)}k</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Risk-adjusted GTM momentum across your open opportunities.</p>
         </Card>
       </div>
 
@@ -537,6 +628,51 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
               <Button className="w-full" onClick={() => onQuickAction('idea')} variant="secondary">
                 <ArrowUpRight className="h-4 w-4" />
                 Open Idea Lab
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-brand-500">Scale OS</p>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.strategyStats.activePlan?.planName || 'No active strategy plan'}</h3>
+              </div>
+              <Target className="h-5 w-5 text-brand-500" />
+            </div>
+            <p className="mt-4 text-sm text-slate-700 dark:text-slate-200">
+              {operatingMetrics.strategyStats.activePlan?.mission || 'Create an active quarterly plan so strategy, PMF, GTM, and finance all stay connected.'}
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Recent Interviews</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.customerStats.recentInterviews}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Weighted Pipeline</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">${Math.round(operatingMetrics.revenueStats.weightedPipeline / 1000)}k</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Runway</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.financeStats.runwayMonths} mo</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Upcoming Board Items</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.boardStats.upcomingItems.length}</p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <Button onClick={() => onQuickAction('strategy')} variant="secondary">
+                Open Strategy
+              </Button>
+              <Button onClick={() => onQuickAction('research')} variant="secondary">
+                Open Research
+              </Button>
+              <Button onClick={() => onQuickAction('revenue')} variant="secondary">
+                Open Revenue
+              </Button>
+              <Button onClick={() => onQuickAction('board')} variant="secondary">
+                Open Board & Capital
               </Button>
             </div>
           </Card>

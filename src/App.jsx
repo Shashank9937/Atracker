@@ -12,6 +12,11 @@ import { WeeklyReviewPage } from './pages/WeeklyReviewPage';
 import { DecisionJournalPage } from './pages/DecisionJournalPage';
 import { KnowledgeVaultPage } from './pages/KnowledgeVaultPage';
 import { KPIAnalyticsPage } from './pages/KPIAnalyticsPage';
+import { CompanyStrategyPage } from './pages/CompanyStrategyPage';
+import { CustomerResearchPage } from './pages/CustomerResearchPage';
+import { RevenueEnginePage } from './pages/RevenueEnginePage';
+import { FinanceRunwayPage } from './pages/FinanceRunwayPage';
+import { BoardCapitalPage } from './pages/BoardCapitalPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AIAgentsPage } from './pages/AIAgentsPage';
 import { AIAgentBuilderPage } from './pages/AIAgentBuilderPage';
@@ -120,6 +125,11 @@ function App() {
           9: 'kpi-analytics',
           0: 'settings',
           b: 'book-learning',
+          s: 'company-strategy',
+          r: 'customer-research',
+          v: 'revenue-engine',
+          f: 'finance-runway',
+          c: 'board-capital',
           g: 'ai-agents',
           l: 'ai-learning-roadmap',
           m: 'ai-agent-architect',
@@ -147,6 +157,11 @@ function App() {
     if (action === 'work') navigateTo('daily-execution', 'daily-entry-form');
     if (action === 'book') navigateTo('book-learning', 'book-form');
     if (action === 'contact') navigateTo('networking-crm', 'contact-form');
+    if (action === 'strategy') navigateTo('company-strategy');
+    if (action === 'research') navigateTo('customer-research');
+    if (action === 'revenue') navigateTo('revenue-engine');
+    if (action === 'finance') navigateTo('finance-runway');
+    if (action === 'board') navigateTo('board-capital');
     if (action === 'journal') setJournalOpen(true);
     if (action === 'agent') setAgentModalOpen(true);
     if (action === 'ai-opportunity') navigateTo('ai-opportunities');
@@ -184,6 +199,16 @@ function App() {
         return <KnowledgeVaultPage />;
       case 'kpi-analytics':
         return <KPIAnalyticsPage />;
+      case 'company-strategy':
+        return <CompanyStrategyPage />;
+      case 'customer-research':
+        return <CustomerResearchPage />;
+      case 'revenue-engine':
+        return <RevenueEnginePage />;
+      case 'finance-runway':
+        return <FinanceRunwayPage />;
+      case 'board-capital':
+        return <BoardCapitalPage />;
       case 'settings':
         return <SettingsPage />;
       case 'ai-agents':

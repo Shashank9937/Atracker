@@ -6,9 +6,12 @@ import {
   Dumbbell,
   Gauge,
   HeartPulse,
+  Landmark,
   Lightbulb,
   NotebookPen,
   Plus,
+  Target,
+  TrendingUp,
   UserPlus,
   Zap,
 } from 'lucide-react';
@@ -36,6 +39,7 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
     founderScore,
     founderLeverage,
     aiStats,
+    operatingMetrics,
     activeIdea,
     currentBook,
     learningStreak,
@@ -207,6 +211,70 @@ export const DashboardPage = ({ onQuickAction, onOpenQuickCapture, onOpenJournal
             </button>
             <button className="secondary-button justify-start" onClick={() => onQuickAction('ai-experiment')} type="button">
               Run Experiment
+            </button>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-brand-500">Unicorn Control Tower</p>
+              <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Company signal in one scan</h3>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Strategy, PMF, GTM, runway, and capital readiness now sit inside the same operating system.</p>
+            </div>
+            <Target className="h-5 w-5 text-brand-500" />
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Founder Scale Score</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.founderScaleScore}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Runway</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.financeStats.runwayMonths} mo</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Weighted Pipeline</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">${Math.round(operatingMetrics.revenueStats.weightedPipeline / 1000)}k</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Strong PMF Signals</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.customerStats.strongSignals}</p>
+            </div>
+          </div>
+          <div className="mt-5 space-y-3">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/50">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-white">
+                <TrendingUp className="h-4 w-4 text-brand-500" />
+                Revenue Focus
+              </div>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                {operatingMetrics.revenueStats.topDeals[0]?.accountName
+                  ? `${operatingMetrics.revenueStats.topDeals[0].accountName} is the highest-weighted open opportunity.`
+                  : 'No top revenue opportunity logged yet.'}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/50">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-white">
+                <Landmark className="h-4 w-4 text-brand-500" />
+                Capital Focus
+              </div>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                {operatingMetrics.boardStats.upcomingItems[0]?.title
+                  ? `${operatingMetrics.boardStats.upcomingItems[0].title} is the next board or investor moment on deck.`
+                  : 'No upcoming board or capital item logged yet.'}
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('strategy')} type="button">
+              Company Strategy
+            </button>
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('research')} type="button">
+              Customer Research
+            </button>
+            <button className="secondary-button justify-start" onClick={() => onQuickAction('finance')} type="button">
+              Finance & Runway
             </button>
           </div>
         </Card>

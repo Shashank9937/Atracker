@@ -48,8 +48,18 @@ import {
   getAiStats,
   normalizeTagList,
 } from '../utils/aiMetrics';
+import {
+  createEmptyBoardItem,
+  createEmptyCustomerInsight,
+  createEmptyFinanceSnapshot,
+  createEmptyRevenueItem,
+  createEmptyStrategicPlan,
+  createSeedUnicornData,
+} from '../utils/unicornData';
+import { getFounderOperatingMetrics } from '../utils/unicornMetrics';
 
 const AppContext = createContext(null);
+const seededUnicornData = createSeedUnicornData();
 
 const createId = (prefix) =>
   globalThis.crypto?.randomUUID
@@ -231,6 +241,119 @@ const normalizeEveningJournal = (journal) => ({
   learning: journal?.learning || '',
   gratitude: journal?.gratitude || '',
 });
+
+const normalizeStrategicPlan = (plan) => {
+  const base = createEmptyStrategicPlan();
+  return {
+    ...base,
+    ...plan,
+    id: plan?.id || base.id,
+    planName: plan?.planName || '',
+    horizon: plan?.horizon || base.horizon,
+    period: plan?.period || '',
+    mission: plan?.mission || '',
+    northStarMetric: plan?.northStarMetric || '',
+    northStarTarget: plan?.northStarTarget || '',
+    keyResults: plan?.keyResults || '',
+    strategicBets: plan?.strategicBets || '',
+    topPriorities: plan?.topPriorities || '',
+    risks: plan?.risks || '',
+    progress: toNumber(plan?.progress, 0),
+    confidence: toNumber(plan?.confidence, 5),
+    status: plan?.status || base.status,
+    createdAt: plan?.createdAt || base.createdAt,
+  };
+};
+
+const normalizeCustomerInsight = (insight) => {
+  const base = createEmptyCustomerInsight();
+  return {
+    ...base,
+    ...insight,
+    id: insight?.id || base.id,
+    company: insight?.company || '',
+    contactName: insight?.contactName || '',
+    segment: insight?.segment || '',
+    interviewDate: insight?.interviewDate || base.interviewDate,
+    problemArea: insight?.problemArea || '',
+    painScore: toNumber(insight?.painScore, 7),
+    budgetSignal: toNumber(insight?.budgetSignal, 5),
+    currentWorkflow: insight?.currentWorkflow || '',
+    urgency: insight?.urgency || '',
+    objections: insight?.objections || '',
+    requestedOutcome: insight?.requestedOutcome || '',
+    notableQuote: insight?.notableQuote || '',
+    pmfSignal: insight?.pmfSignal || base.pmfSignal,
+    nextStep: insight?.nextStep || '',
+    createdAt: insight?.createdAt || base.createdAt,
+  };
+};
+
+const normalizeRevenueItem = (item) => {
+  const base = createEmptyRevenueItem();
+  return {
+    ...base,
+    ...item,
+    id: item?.id || base.id,
+    accountName: item?.accountName || '',
+    channelType: item?.channelType || base.channelType,
+    stage: item?.stage || base.stage,
+    dealValue: toNumber(item?.dealValue, 0),
+    closeProbability: toNumber(item?.closeProbability, 10),
+    expectedCloseDate: item?.expectedCloseDate || '',
+    source: item?.source || '',
+    useCase: item?.useCase || '',
+    nextStep: item?.nextStep || '',
+    blockers: item?.blockers || '',
+    createdAt: item?.createdAt || base.createdAt,
+  };
+};
+
+const normalizeFinanceSnapshot = (snapshot) => {
+  const base = createEmptyFinanceSnapshot();
+  return {
+    ...base,
+    ...snapshot,
+    id: snapshot?.id || base.id,
+    snapshotDate: snapshot?.snapshotDate || base.snapshotDate,
+    cashOnHand: toNumber(snapshot?.cashOnHand, 0),
+    monthlyRevenue: toNumber(snapshot?.monthlyRevenue, 0),
+    monthlyBurn: toNumber(snapshot?.monthlyBurn, 0),
+    payroll: toNumber(snapshot?.payroll, 0),
+    infraCost: toNumber(snapshot?.infraCost, 0),
+    marketingSpend: toNumber(snapshot?.marketingSpend, 0),
+    otherExpenses: toNumber(snapshot?.otherExpenses, 0),
+    targetRunwayMonths: toNumber(snapshot?.targetRunwayMonths, 18),
+    notes: snapshot?.notes || '',
+    scenarioName: snapshot?.scenarioName || base.scenarioName,
+    createdAt: snapshot?.createdAt || base.createdAt,
+  };
+};
+
+const normalizeBoardItem = (item) => {
+  const base = createEmptyBoardItem();
+  return {
+    ...base,
+    ...item,
+    id: item?.id || base.id,
+    entryType: item?.entryType || base.entryType,
+    title: item?.title || '',
+    contactName: item?.contactName || '',
+    firm: item?.firm || '',
+    stage: item?.stage || '',
+    status: item?.status || base.status,
+    date: item?.date || base.date,
+    nextActionDate: item?.nextActionDate || '',
+    targetRaise: toNumber(item?.targetRaise, 0),
+    checkSize: toNumber(item?.checkSize, 0),
+    interestLevel: toNumber(item?.interestLevel, 5),
+    keyWins: item?.keyWins || '',
+    metricsSummary: item?.metricsSummary || '',
+    asks: item?.asks || '',
+    notes: item?.notes || '',
+    createdAt: item?.createdAt || base.createdAt,
+  };
+};
 
 const normalizeAiModule = (module) => {
   const base = createEmptyAiModule();
@@ -427,6 +550,7 @@ const normalizeAiQuickCapture = (capture) => ({
 
 const byDateDesc = (left, right) => new Date(right.date || right.updatedAt || right.createdAt || 0) - new Date(left.date || left.updatedAt || left.createdAt || 0);
 const byScoreDesc = (key) => (left, right) => toNumber(right[key], 0) - toNumber(left[key], 0);
+const byFieldDesc = (key) => (left, right) => new Date(right[key] || right.createdAt || 0) - new Date(left[key] || left.createdAt || 0);
 const bookStatusOrder = { Reading: 0, 'Not Started': 1, Completed: 2 };
 const byBookPriority = (left, right) => {
   const rankDelta = (bookStatusOrder[left.status] ?? 99) - (bookStatusOrder[right.status] ?? 99);
@@ -468,6 +592,21 @@ const normalizeAppData = (raw) => {
     knowledgeItems: Array.isArray(source.knowledgeItems) ? source.knowledgeItems.map(normalizeKnowledgeItem).sort(byDateDesc) : [],
     quickNotes: Array.isArray(source.quickNotes) ? source.quickNotes.map(normalizeQuickNote).sort(byDateDesc) : [],
     eveningJournals: Array.isArray(source.eveningJournals) ? source.eveningJournals.map(normalizeEveningJournal).sort(byDateDesc) : [],
+    strategicPlans: Array.isArray(source.strategicPlans)
+      ? source.strategicPlans.map(normalizeStrategicPlan).sort(byFieldDesc('createdAt'))
+      : seededUnicornData.strategicPlans.map(normalizeStrategicPlan).sort(byFieldDesc('createdAt')),
+    customerResearch: Array.isArray(source.customerResearch)
+      ? source.customerResearch.map(normalizeCustomerInsight).sort(byFieldDesc('interviewDate'))
+      : seededUnicornData.customerResearch.map(normalizeCustomerInsight).sort(byFieldDesc('interviewDate')),
+    revenuePipeline: Array.isArray(source.revenuePipeline)
+      ? source.revenuePipeline.map(normalizeRevenueItem).sort(byFieldDesc('expectedCloseDate'))
+      : seededUnicornData.revenuePipeline.map(normalizeRevenueItem).sort(byFieldDesc('expectedCloseDate')),
+    financeSnapshots: Array.isArray(source.financeSnapshots)
+      ? source.financeSnapshots.map(normalizeFinanceSnapshot).sort(byFieldDesc('snapshotDate'))
+      : seededUnicornData.financeSnapshots.map(normalizeFinanceSnapshot).sort(byFieldDesc('snapshotDate')),
+    boardItems: Array.isArray(source.boardItems)
+      ? source.boardItems.map(normalizeBoardItem).sort(byFieldDesc('date'))
+      : seededUnicornData.boardItems.map(normalizeBoardItem).sort(byFieldDesc('date')),
     ai: normalizeAiSection(source.ai || createEmptyAiSection()),
   };
 };
@@ -635,6 +774,46 @@ export const AppProvider = ({ children }) => {
     setData((current) => ({
       ...current,
       knowledgeItems: replaceById(current.knowledgeItems, record, byDateDesc),
+    }));
+  };
+
+  const saveStrategicPlan = (plan) => {
+    const record = normalizeStrategicPlan(plan);
+    setData((current) => ({
+      ...current,
+      strategicPlans: replaceById(current.strategicPlans, record, byFieldDesc('createdAt')),
+    }));
+  };
+
+  const saveCustomerInsight = (insight) => {
+    const record = normalizeCustomerInsight(insight);
+    setData((current) => ({
+      ...current,
+      customerResearch: replaceById(current.customerResearch, record, byFieldDesc('interviewDate')),
+    }));
+  };
+
+  const saveRevenueItem = (item) => {
+    const record = normalizeRevenueItem(item);
+    setData((current) => ({
+      ...current,
+      revenuePipeline: replaceById(current.revenuePipeline, record, byFieldDesc('expectedCloseDate')),
+    }));
+  };
+
+  const saveFinanceSnapshot = (snapshot) => {
+    const record = normalizeFinanceSnapshot(snapshot);
+    setData((current) => ({
+      ...current,
+      financeSnapshots: replaceById(current.financeSnapshots, record, byFieldDesc('snapshotDate')),
+    }));
+  };
+
+  const saveBoardItem = (item) => {
+    const record = normalizeBoardItem(item);
+    setData((current) => ({
+      ...current,
+      boardItems: replaceById(current.boardItems, record, byFieldDesc('date')),
     }));
   };
 
@@ -1104,6 +1283,7 @@ export const AppProvider = ({ children }) => {
   const aiAnalytics = useMemo(() => buildAiAnalytics(data), [data]);
   const aiOpportunityCharts = useMemo(() => buildOpportunityCharts(data.ai), [data.ai]);
   const founderLeverage = useMemo(() => calculateFounderLeverage(data), [data]);
+  const operatingMetrics = useMemo(() => getFounderOperatingMetrics(data), [data]);
 
   const value = {
     data,
@@ -1121,6 +1301,7 @@ export const AppProvider = ({ children }) => {
     thisWeekSnapshot,
     storageDiagnostics,
     founderLeverage,
+    operatingMetrics,
     aiStats,
     aiAnalytics,
     aiOpportunityCharts,
@@ -1135,6 +1316,11 @@ export const AppProvider = ({ children }) => {
     addWeeklyReview,
     addDecision,
     addKnowledgeItem,
+    saveStrategicPlan,
+    saveCustomerInsight,
+    saveRevenueItem,
+    saveFinanceSnapshot,
+    saveBoardItem,
     addEveningJournal,
     addQuickCapture,
     saveAiModule,

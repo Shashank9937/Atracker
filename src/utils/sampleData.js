@@ -1,5 +1,6 @@
 import { addDays, getTodayKey, getWeekNumber, toDateKey } from './date';
 import { createSeedAiSection } from './aiData';
+import { createSeedUnicornData } from './unicornData';
 
 const createId = (prefix) =>
   globalThis.crypto?.randomUUID
@@ -664,6 +665,7 @@ const eveningJournals = [
 export const createSampleData = () =>
   JSON.parse(
     JSON.stringify({
+      ...createSeedUnicornData(),
       settings: {
         founderName: 'Shashank',
         theme: 'dark',

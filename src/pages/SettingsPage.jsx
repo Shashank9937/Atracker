@@ -130,6 +130,34 @@ export const SettingsPage = () => {
             ))}
           </div>
         </Card>
+
+        <Card className="p-6 xl:col-span-2">
+          <div className="flex items-center gap-3">
+            <RefreshCcw className="h-5 w-5 text-brand-500" />
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Workspace Snapshot</h2>
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              ['Daily Entries', data.dailyEntries.length],
+              ['Books', data.books.length],
+              ['Ideas', data.ideas.length],
+              ['Contacts', data.contacts.length],
+              ['Strategic Plans', data.strategicPlans.length],
+              ['Customer Research', data.customerResearch.length],
+              ['Revenue Items', data.revenuePipeline.length],
+              ['Finance Snapshots', data.financeSnapshots.length],
+              ['Board & Capital', data.boardItems.length],
+              ['AI Agents', data.ai.agents.length],
+              ['AI Opportunities', data.ai.opportunities.length],
+              ['Knowledge Notes', data.knowledgeItems.length + data.ai.notes.length],
+            ].map(([label, value]) => (
+              <div className="rounded-2xl bg-slate-50/70 p-4 dark:bg-slate-950/50" key={label}>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{value}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     </div>
   );
