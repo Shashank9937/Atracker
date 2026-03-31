@@ -201,7 +201,7 @@ export const getFounderOperatingMetrics = (data) => {
   const boardStats = {
     totalItems: boardItems.length,
     overdueItems: overdueBoardItems.length,
-    upcomingItems,
+    upcomingItems: upcomingBoardItems,
     activeFundraise,
     highestConvictionInvestor:
       [...boardItems]
