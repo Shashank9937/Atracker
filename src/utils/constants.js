@@ -62,6 +62,7 @@ export const PROJECT_STAGE_OPTIONS = ['Backlog', 'In Progress', 'Blocked', 'Read
 export const WEEKDAY_OPTIONS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export const SHORTCUTS = [
+  { keys: 'Ctrl/Cmd+K or /', action: 'Open the global command palette and search across the whole founder OS' },
   { keys: 'Q', action: 'Open quick capture from anywhere outside inputs' },
   { keys: 'J', action: 'Open evening journal modal' },
   { keys: 'A', action: 'Open the new agent modal' },

@@ -34,6 +34,7 @@ import { Topbar } from './components/Topbar';
 import { QuickCaptureModal } from './components/QuickCaptureModal';
 import { EveningJournalModal } from './components/EveningJournalModal';
 import { AgentQuickCreateModal } from './components/AgentQuickCreateModal';
+import { CommandPaletteModal } from './components/CommandPaletteModal';
 
 const DEFAULT_PAGE = 'founder-inbox';
 
@@ -59,6 +60,7 @@ function App() {
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
   const [agentModalOpen, setAgentModalOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   useEffect(() => {
     if (window.location.hash !== `#${activePage}`) {
@@ -94,9 +96,21 @@ function App() {
         setQuickCaptureOpen(false);
         setJournalOpen(false);
         setAgentModalOpen(false);
+        setCommandPaletteOpen(false);
+      }
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandPaletteOpen(true);
+        return;
       }
 
       if (editing) return;
+
+      if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key === '/') {
+        event.preventDefault();
+        setCommandPaletteOpen(true);
+      }
 
       if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'q') {
         event.preventDefault();
@@ -249,13 +263,28 @@ function App() {
     <div className="app-shell min-h-screen text-slate-900 dark:text-slate-100">
       <Sidebar activePage={activePage} onClose={() => setSidebarOpen(false)} onNavigate={navigateTo} open={sidebarOpen} />
       <div className="lg:pl-72">
-        <Topbar onMenuClick={() => setSidebarOpen(true)} onOpenJournal={() => setJournalOpen(true)} onOpenQuickCapture={() => setQuickCaptureOpen(true)} title={pageTitle} />
+        <Topbar
+          onMenuClick={() => setSidebarOpen(true)}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+          onOpenJournal={() => setJournalOpen(true)}
+          onOpenQuickCapture={() => setQuickCaptureOpen(true)}
+          title={pageTitle}
+        />
         <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">{renderPage()}</main>
       </div>
 
       <QuickCaptureModal agents={data.ai.agents} onClose={() => setQuickCaptureOpen(false)} onSave={addQuickCapture} open={quickCaptureOpen} />
       <EveningJournalModal onClose={() => setJournalOpen(false)} onSave={addEveningJournal} open={journalOpen} todayKey={todayKey} />
       <AgentQuickCreateModal onClose={() => setAgentModalOpen(false)} onSave={saveAiAgent} open={agentModalOpen} />
+      <CommandPaletteModal
+        onClose={() => setCommandPaletteOpen(false)}
+        onNavigate={navigateTo}
+        onOpenAgentModal={() => setAgentModalOpen(true)}
+        onOpenJournal={() => setJournalOpen(true)}
+        onOpenQuickCapture={() => setQuickCaptureOpen(true)}
+        onQuickAction={handleQuickAction}
+        open={commandPaletteOpen}
+      />
     </div>
   );
 }

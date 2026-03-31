@@ -1,9 +1,9 @@
-import { CalendarDays, Menu, NotebookPen, ScanSearch } from 'lucide-react';
+import { CalendarDays, Menu, NotebookPen, ScanSearch, Sparkles } from 'lucide-react';
 import { formatLongDate } from '../utils/date';
 import { Button } from './Button';
 import { ThemeToggle } from './ThemeToggle';
 
-export const Topbar = ({ title, onMenuClick, onOpenQuickCapture, onOpenJournal }) => (
+export const Topbar = ({ title, onMenuClick, onOpenCommandPalette, onOpenQuickCapture, onOpenJournal }) => (
   <header className="sticky top-0 z-30 border-b border-white/40 bg-white/60 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/60">
     <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
       <div className="flex items-center gap-3">
@@ -22,8 +22,12 @@ export const Topbar = ({ title, onMenuClick, onOpenQuickCapture, onOpenJournal }
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="secondary" onClick={onOpenQuickCapture}>
+        <Button variant="secondary" onClick={onOpenCommandPalette}>
           <ScanSearch className="h-4 w-4" />
+          Search
+        </Button>
+        <Button variant="secondary" onClick={onOpenQuickCapture}>
+          <Sparkles className="h-4 w-4" />
           Quick Capture
         </Button>
         <Button variant="secondary" onClick={onOpenJournal}>

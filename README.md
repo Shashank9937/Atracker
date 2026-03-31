@@ -20,6 +20,7 @@ npm run preview
 
 - Dashboard command center with founder score, deep work timer, notes, follow-ups, current book, and AI leverage progress
 - Founder Inbox as the default command center for daily priorities across execution, learning, GTM, finance, and AI leverage
+- Global command palette with `Ctrl/Cmd+K` or `/` for cross-workspace search, instant navigation, and founder actions
 - Daily execution tracker with calendar view and book-learning fields
 - Book Learning, Idea Lab, Opportunity Radar, Networking CRM, Weekly Review, Decision Journal, Knowledge Vault
 - Unicorn founder operating layers: Company Strategy, Customer Research, Revenue Engine, Finance & Runway, Board & Capital

@@ -135,7 +135,7 @@ export const Sidebar = ({ activePage, open, onNavigate, onClose }) => {
 
         <div className="panel-card-strong mt-6 p-4 text-sm text-slate-200">
           <p className="text-xs uppercase tracking-[0.25em] text-brand-200">Shortcuts</p>
-          <p className="mt-2 font-medium text-white">Capture with Q. Journal with J. Create an agent with A.</p>
+          <p className="mt-2 font-medium text-white">Search with Ctrl/Cmd+K. Capture with Q. Journal with J. Create an agent with A.</p>
           <p className="mt-2 text-xs text-slate-300">The AI section persists to localStorage and mirrors into a dedicated AI namespace for safe migration.</p>
         </div>
       </aside>
