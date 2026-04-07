@@ -69,7 +69,7 @@ body {
 
 @layer components {
   .panel-card {
-    @apply rounded-3xl border border-white/60 bg-white/80 shadow-soft backdrop-blur-xl transition duration-300 dark:border-slate-800/80 dark:bg-slate-900/75;
+    @apply rounded-3xl border border-white/60 bg-white/80 shadow-soft backdrop-blur-xl transition-all duration-300 hover:shadow-[0_24px_50px_-20px_rgba(15,23,42,0.18)] dark:border-slate-800/80 dark:bg-slate-900/75;
   }
 
   .panel-card-strong {
@@ -77,7 +77,7 @@ body {
   }
 
   .input-control {
-    @apply w-full rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-400 focus:ring-2 focus:ring-brand-200/60 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand-400 dark:focus:ring-brand-500/20;
+    @apply w-full rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-200/60 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand-400 dark:focus:ring-brand-500/20;
   }
 
   .select-control {
@@ -89,19 +89,19 @@ body {
   }
 
   .primary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600 focus:ring-2 focus:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-brand-600 hover:shadow-lg hover:shadow-brand-500/25 focus:ring-2 focus:ring-brand-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .secondary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-brand-300 hover:text-brand-700 focus:ring-2 focus:ring-brand-200/60 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:border-brand-500 dark:hover:text-brand-200;
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:border-brand-300 hover:bg-white hover:text-brand-700 hover:shadow-sm focus:ring-2 focus:ring-brand-200/60 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:border-brand-500 dark:hover:bg-slate-900 dark:hover:text-brand-200;
   }
 
   .ghost-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white;
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-100/80 hover:text-slate-900 active:scale-[0.98] dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white;
   }
 
   .danger-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20;
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition-all duration-200 hover:bg-rose-100 hover:shadow-sm active:scale-[0.98] dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20;
   }
 
   .badge {
