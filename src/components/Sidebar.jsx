@@ -22,6 +22,7 @@ import {
   Target,
   TrendingUp,
   X,
+  Zap,
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { NAV_ITEMS } from '../utils/constants';
@@ -61,7 +62,12 @@ const icons = {
 export const Sidebar = ({ activePage, open, onNavigate, onClose }) => {
   const {
     data: { settings },
+    founderScore,
+    founderLeverage,
   } = useAppContext();
+
+  const scoreGrade = founderScore >= 80 ? 'Elite' : founderScore >= 60 ? 'Strong' : founderScore >= 40 ? 'Building' : 'Early';
+  const scoreColor = founderScore >= 70 ? 'text-emerald-400' : founderScore >= 40 ? 'text-amber-400' : 'text-rose-400';
 
   const sections = NAV_ITEMS.reduce((acc, item) => {
     acc[item.section] = [...(acc[item.section] || []), item];
@@ -133,10 +139,24 @@ export const Sidebar = ({ activePage, open, onNavigate, onClose }) => {
           ))}
         </nav>
 
-        <div className="panel-card-strong mt-6 p-4 text-sm text-slate-200">
-          <p className="text-xs uppercase tracking-[0.25em] text-brand-200">Shortcuts</p>
-          <p className="mt-2 font-medium text-white">Search with Ctrl/Cmd+K. Capture with Q. Journal with J. Create an agent with A.</p>
-          <p className="mt-2 text-xs text-slate-300">The AI section persists to localStorage and mirrors into a dedicated AI namespace for safe migration.</p>
+        <div className="mt-6 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">Today's Score</p>
+              <div className="mt-1 flex items-baseline gap-1.5">
+                <span className={`text-2xl font-semibold ${scoreColor}`}>{founderScore}</span>
+                <span className="text-xs text-slate-500">/ 100 · {scoreGrade}</span>
+              </div>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10">
+              <Zap className={`h-5 w-5 ${scoreColor}`} />
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+            <span>Leverage: <span className="font-medium text-slate-300">{founderLeverage}</span></span>
+            <span className="text-slate-600">·</span>
+            <span><kbd className="rounded border border-slate-700 bg-slate-800 px-1 py-0.5 text-[10px] text-slate-400">Q</kbd> capture <kbd className="rounded border border-slate-700 bg-slate-800 px-1 py-0.5 text-[10px] text-slate-400">J</kbd> journal</span>
+          </div>
         </div>
       </aside>
     </>

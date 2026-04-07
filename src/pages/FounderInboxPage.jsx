@@ -428,6 +428,34 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
     });
   };
 
+  const criticalCount = inboxActions.filter((item) => item.tone !== 'normal').length;
+
+  const scoreBadgeClass = founderScore >= 70
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'
+    : founderScore >= 40
+      ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300'
+      : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300';
+
+  const runwayBadgeClass = operatingMetrics.financeStats.runwayMonths > 12
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'
+    : operatingMetrics.financeStats.runwayMonths > 6
+      ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300'
+      : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300';
+
+  const pipelineBadgeClass = operatingMetrics.revenueStats.weightedPipeline >= 100000
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'
+    : 'border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-300';
+
+  const deepWorkBadgeClass = thisWeekSnapshot.deepWorkHours >= 20
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'
+    : 'border-slate-200/80 bg-white/70 text-slate-600 dark:border-slate-800/80 dark:bg-slate-900/80 dark:text-slate-300';
+
+  const criticalNumClass = criticalCount > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-500 dark:text-emerald-400';
+  const reviewsNumClass = reviewsDueCount > 0 ? 'text-amber-500 dark:text-amber-400' : 'text-emerald-500 dark:text-emerald-400';
+  const learningNumClass = learningGaps > 0 ? 'text-amber-500 dark:text-amber-400' : 'text-emerald-500 dark:text-emerald-400';
+  const runwayNumClass = operatingMetrics.financeStats.runwayMonths > 12 ? 'text-emerald-500 dark:text-emerald-400' : operatingMetrics.financeStats.runwayMonths > 6 ? 'text-amber-500 dark:text-amber-400' : 'text-rose-500 dark:text-rose-400';
+  const pipelineNumClass = operatingMetrics.revenueStats.weightedPipeline >= 100000 ? 'text-emerald-500 dark:text-emerald-400' : 'text-brand-500 dark:text-brand-400';
+
   const briefText = useMemo(() => {
     const parts = [];
 
@@ -470,15 +498,23 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
       />
 
       <Card className="panel-card-strong p-6">
-        <p className="text-xs uppercase tracking-[0.25em] text-brand-600 dark:text-brand-200">Morning Brief</p>
+        <p className="text-xs uppercase tracking-[0.25em] text-brand-600 dark:text-brand-300">Morning Brief</p>
         <h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{briefText}</h2>
         <div className="mt-5 flex flex-wrap gap-2">
-          <span className="badge">Founder Score {founderScore}</span>
-          <span className="badge">Founder Leverage {founderLeverage}</span>
-          <span className="badge">Scale Score {operatingMetrics.founderScaleScore}</span>
-          <span className="badge">{operatingMetrics.financeStats.runwayMonths} mo runway</span>
-          <span className="badge">${Math.round(operatingMetrics.revenueStats.weightedPipeline / 1000)}k weighted pipeline</span>
-          <span className="badge">{thisWeekSnapshot.deepWorkHours}h deep work this week</span>
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${scoreBadgeClass}`}>
+            Score {founderScore}
+          </span>
+          <span className="badge">Leverage {founderLeverage}</span>
+          <span className="badge">Scale {operatingMetrics.founderScaleScore}</span>
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${runwayBadgeClass}`}>
+            {operatingMetrics.financeStats.runwayMonths} mo runway
+          </span>
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${pipelineBadgeClass}`}>
+            ${Math.round(operatingMetrics.revenueStats.weightedPipeline / 1000)}k pipeline
+          </span>
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${deepWorkBadgeClass}`}>
+            {thisWeekSnapshot.deepWorkHours}h deep work
+          </span>
           <span className="badge">{aiStats.weeklyHoursSaved} hrs/week saved</span>
         </div>
       </Card>
@@ -486,28 +522,28 @@ export const FounderInboxPage = ({ onNavigate, onOpenJournal, onOpenQuickCapture
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card className="p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Critical Queue</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{inboxActions.filter((item) => item.tone !== 'normal').length}</p>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Items that should not drift quietly into next week.</p>
+          <p className={`mt-2 text-3xl font-semibold ${criticalNumClass}`}>{criticalCount}</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Items that should not drift into next week.</p>
         </Card>
         <Card className="p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Reviews Due</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{reviewsDueCount}</p>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Follow-ups and decisions that need closure or a next move.</p>
+          <p className={`mt-2 text-3xl font-semibold ${reviewsNumClass}`}>{reviewsDueCount}</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Follow-ups and decisions needing closure.</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning Loop</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{learningGaps}</p>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Pending AI practice tasks plus today’s reading gap.</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning Gap</p>
+          <p className={`mt-2 text-3xl font-semibold ${learningNumClass}`}>{learningGaps}</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Pending practice + today’s reading gap.</p>
         </Card>
         <Card className="p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Runway</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{operatingMetrics.financeStats.runwayMonths} mo</p>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Capital buffer relative to your current net burn.</p>
+          <p className={`mt-2 text-3xl font-semibold ${runwayNumClass}`}>{operatingMetrics.financeStats.runwayMonths} mo</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Capital buffer vs current burn rate.</p>
         </Card>
         <Card className="p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Weighted Pipeline</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">${Math.round(operatingMetrics.revenueStats.weightedPipeline / 1000)}k</p>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Risk-adjusted GTM momentum across your open opportunities.</p>
+          <p className={`mt-2 text-3xl font-semibold ${pipelineNumClass}`}>${Math.round(operatingMetrics.revenueStats.weightedPipeline / 1000)}k</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Risk-adjusted GTM momentum.</p>
         </Card>
       </div>
 
